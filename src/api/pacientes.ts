@@ -13,9 +13,14 @@ export const getPaciente = async (id: number): Promise<Paciente> => {
   return data;
 };
 
-export const getPacienteFicha = async (id: number): Promise<Ficha> => {
-  const { data } = await client.get<Ficha>(`/pacientes/${id}/ficha`);
-  return data;
+export const getPacienteFicha = async (id: number): Promise<Ficha | null> => {
+  try {
+    const { data } = await client.get<Ficha>(`/pacientes/${id}/ficha`);
+    return data;
+  } catch (err: any) {
+    if (err?.response?.status === 404) return null;
+    throw err;
+  }
 };
 
 export const getPacienteSesiones = async (id: number): Promise<Sesion[]> => {

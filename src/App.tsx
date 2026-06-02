@@ -1,5 +1,7 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
+import PrivateRoute from './components/auth/PrivateRoute';
+import LoginPage from './pages/Login/LoginPage';
 import Dashboard from './pages/Dashboard';
 import PacientesList from './pages/Pacientes/PacientesList';
 import PacienteDetail from './pages/Pacientes/PacienteDetail';
@@ -12,18 +14,64 @@ import InformesPage from './pages/Informes/InformesPage';
 
 export default function App() {
   return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/pacientes" element={<PacientesList />} />
-        <Route path="/pacientes/:id" element={<PacienteDetail />} />
-        <Route path="/terapeutas" element={<TerapeutasList />} />
-        <Route path="/terapeutas/:id" element={<TerapeutaDetail />} />
-        <Route path="/sesiones" element={<SesionesList />} />
-        <Route path="/insumos" element={<InsumosPage />} />
-        <Route path="/estructura" element={<EstructuraPage />} />
-        <Route path="/informes" element={<InformesPage />} />
-      </Routes>
-    </Layout>
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/*"
+        element={
+          <PrivateRoute>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/pacientes" element={<PacientesList />} />
+                <Route path="/pacientes/:id" element={<PacienteDetail />} />
+                <Route
+                  path="/terapeutas"
+                  element={
+                    <PrivateRoute requiredRole="administrador">
+                      <TerapeutasList />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/terapeutas/:id"
+                  element={
+                    <PrivateRoute requiredRole="administrador">
+                      <TerapeutaDetail />
+                    </PrivateRoute>
+                  }
+                />
+                <Route path="/sesiones" element={<SesionesList />} />
+                <Route
+                  path="/insumos"
+                  element={
+                    <PrivateRoute requiredRole="administrador">
+                      <InsumosPage />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/estructura"
+                  element={
+                    <PrivateRoute requiredRole="administrador">
+                      <EstructuraPage />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/informes"
+                  element={
+                    <PrivateRoute requiredRole="administrador">
+                      <InformesPage />
+                    </PrivateRoute>
+                  }
+                />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Layout>
+          </PrivateRoute>
+        }
+      />
+    </Routes>
   );
 }

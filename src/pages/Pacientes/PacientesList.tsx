@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { getPacientes, createPaciente } from '../../api/pacientes';
 import { getSucursales } from '../../api/sucursales';
+import { useAuth } from '../../context/AuthContext';
 import Table, { type Column } from '../../components/ui/Table';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
@@ -31,6 +32,7 @@ export default function PacientesList() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { showToast } = useToast();
+  const { isAdmin } = useAuth();
   const [search, setSearch] = useState('');
   const [filterSucursal, setFilterSucursal] = useState('');
   const [filterActivo, setFilterActivo] = useState('');
@@ -39,7 +41,7 @@ export default function PacientesList() {
   const [errors, setErrors] = useState<Partial<Record<keyof PacienteForm, string>>>({});
 
   const { data: pacientes, isLoading } = useQuery({ queryKey: ['pacientes'], queryFn: getPacientes });
-  const { data: sucursales } = useQuery({ queryKey: ['sucursales'], queryFn: getSucursales });
+  const { data: sucursales } = useQuery({ queryKey: ['sucursales'], queryFn: getSucursales, enabled: isAdmin });
 
   const mutation = useMutation({
     mutationFn: createPaciente,
@@ -139,7 +141,7 @@ export default function PacientesList() {
           <h1 className="text-2xl font-bold text-slate-900">Pacientes</h1>
           <p className="text-sm text-slate-500 mt-1">{filtered.length} pacientes</p>
         </div>
-        <Button onClick={() => setModalOpen(true)}>+ Nuevo paciente</Button>
+        {isAdmin && <Button onClick={() => setModalOpen(true)}>+ Nuevo paciente</Button>}
       </div>
 
       {/* Filters */}

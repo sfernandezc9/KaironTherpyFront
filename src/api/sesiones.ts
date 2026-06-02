@@ -1,5 +1,6 @@
 import client from './client';
 import type { Sesion, SesionForm, SesionFilters, SesionInsumo, SesionInsumoForm } from '../types/sesion';
+import type { Stock } from '../types/stock';
 
 export const getSesiones = async (filters: SesionFilters = {}): Promise<Sesion[]> => {
   const { data } = await client.get<Sesion[]>('/sesiones', { params: filters });
@@ -40,4 +41,25 @@ export const removeSesionInsumo = async (id: number, id_uso: number): Promise<vo
 
 export const deleteSesion = async (id: number): Promise<void> => {
   await client.delete(`/sesiones/${id}`);
+};
+
+export const getStockSucursalSesion = async (id_sucursal: number): Promise<Stock[]> => {
+  const { data } = await client.get<Array<{
+    id_stock: number;
+    id_insumo: number;
+    nombre: string;
+    unidad_medida: string;
+    cantidad: number;
+    cantidad_minima: number;
+  }>>(`/sesiones/stock-sucursal/${id_sucursal}`);
+  return data.map((s) => ({
+    id_stock: s.id_stock,
+    id_sucursal,
+    id_insumo: s.id_insumo,
+    nombre_insumo: s.nombre,
+    unidad_medida: s.unidad_medida,
+    cantidad: s.cantidad,
+    cantidad_minima: s.cantidad_minima,
+    stock_bajo: false,
+  }));
 };

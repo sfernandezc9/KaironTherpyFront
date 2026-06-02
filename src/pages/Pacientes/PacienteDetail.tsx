@@ -8,7 +8,7 @@ import {
   getPacienteFicha,
   getPacienteSesiones,
 } from '../../api/pacientes';
-import { updateFicha, getFichaHistorial } from '../../api/fichas';
+import { updateFicha, createFicha, getFichaHistorial } from '../../api/fichas';
 import { getTerapeutas } from '../../api/terapeutas';
 import { getSucursales } from '../../api/sucursales';
 import { getSesionInsumos } from '../../api/sesiones';
@@ -22,7 +22,7 @@ import { PageSpinner } from '../../components/ui/Spinner';
 import { useToast } from '../../context/ToastContext';
 import { formatRut, formatDate, formatDateTime, formatDateInput } from '../../utils/format';
 import type { PacienteForm } from '../../types/paciente';
-import type { FichaUpdateForm } from '../../types/ficha';
+import type { FichaForm, FichaUpdateForm } from '../../types/ficha';
 import type { Sesion } from '../../types/sesion';
 
 const TABS = [
@@ -65,7 +65,7 @@ export default function PacienteDetail() {
   const { data: ficha, isLoading: loadingF } = useQuery({
     queryKey: ['ficha', pid],
     queryFn: () => getPacienteFicha(pid),
-    enabled: activeTab === 'ficha',
+    enabled: activeTab === 'ficha' || activeTab === 'sesiones',
   });
   const { data: historial } = useQuery({
     queryKey: ['fichaHistorial', ficha?.id_ficha],
@@ -99,6 +99,16 @@ export default function PacienteDetail() {
       qc.invalidateQueries({ queryKey: ['ficha', pid] });
       qc.invalidateQueries({ queryKey: ['fichaHistorial', ficha?.id_ficha] });
       showToast('Ficha actualizada', 'success');
+      setFichaForm(null);
+    },
+    onError: (e: Error) => showToast(e.message, 'error'),
+  });
+
+  const createFichaMut = useMutation({
+    mutationFn: (form: FichaForm) => createFicha(form),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['ficha', pid] });
+      showToast('Ficha clínica creada', 'success');
       setFichaForm(null);
     },
     onError: (e: Error) => showToast(e.message, 'error'),
@@ -203,7 +213,35 @@ export default function PacienteDetail() {
           {loadingF ? (
             <PageSpinner />
           ) : !ficha ? (
-            <p className="text-slate-500">Sin ficha clínica registrada.</p>
+            <>
+              <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                Este paciente no tiene ficha clínica. Completa los datos y créala para poder registrar sesiones.
+              </div>
+              <div className="grid grid-cols-1 gap-4 mb-4">
+                <TextArea label="Motivo de consulta" rows={3} value={ff.motivo_consulta ?? ''} onChange={(e) => setFichaForm({ ...ff, motivo_consulta: e.target.value })} />
+                <TextArea label="Antecedentes médicos" rows={3} value={ff.antecedentes ?? ''} onChange={(e) => setFichaForm({ ...ff, antecedentes: e.target.value })} />
+                <TextArea label="Alergias" rows={2} value={ff.alergias ?? ''} onChange={(e) => setFichaForm({ ...ff, alergias: e.target.value })} />
+                <TextArea label="Medicamentos actuales" rows={2} value={ff.medicamentos ?? ''} onChange={(e) => setFichaForm({ ...ff, medicamentos: e.target.value })} />
+                <TextArea label="Diagnóstico actual" rows={3} value={ff.diagnostico_actual ?? ''} onChange={(e) => setFichaForm({ ...ff, diagnostico_actual: e.target.value })} />
+                <TextArea label="Observaciones" rows={3} value={ff.observaciones ?? ''} onChange={(e) => setFichaForm({ ...ff, observaciones: e.target.value })} />
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  onClick={() => createFichaMut.mutate({
+                    id_paciente: pid,
+                    motivo_consulta: ff.motivo_consulta ?? '',
+                    antecedentes: ff.antecedentes ?? '',
+                    alergias: ff.alergias ?? '',
+                    medicamentos: ff.medicamentos ?? '',
+                    diagnostico_actual: ff.diagnostico_actual ?? '',
+                    observaciones: ff.observaciones ?? '',
+                  })}
+                  loading={createFichaMut.isPending}
+                >
+                  Crear ficha
+                </Button>
+              </div>
+            </>
           ) : (
             <>
               <div className="grid grid-cols-1 gap-4 mb-4">
@@ -273,7 +311,11 @@ export default function PacienteDetail() {
 
         {/* Sesiones */}
         <TabPanel id="sesiones" active={activeTab}>
-          {loadingS ? (
+          {!ficha && !loadingF ? (
+            <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">
+              Este paciente no tiene ficha clínica. Créala primero en el tab "Ficha clínica" para poder registrar sesiones.
+            </div>
+          ) : loadingS ? (
             <PageSpinner />
           ) : !sesiones?.length ? (
             <p className="text-slate-500">Sin sesiones registradas.</p>
