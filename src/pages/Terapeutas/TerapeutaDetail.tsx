@@ -199,7 +199,10 @@ export default function TerapeutaDetail() {
               {sucursalesAsig.map((s) => (
                 <div key={s.id_sucursal} className="flex items-center justify-between px-4 py-3 border border-slate-200 rounded-lg bg-white">
                   <div>
-                    <p className="text-sm font-medium text-slate-800">{s.nombre_sucursal}</p>
+                    <p className="text-sm font-medium text-slate-800">{s.nombre}</p>
+                    {s.nombre_empresa && (
+                      <p className="text-xs text-slate-400">{s.nombre_empresa}</p>
+                    )}
                     <p className="text-xs text-slate-500">
                       Desde {formatDate(s.fecha_inicio)}
                       {s.fecha_fin ? ` · Hasta ${formatDate(s.fecha_fin)}` : ' · Activo'}
@@ -209,7 +212,7 @@ export default function TerapeutaDetail() {
                     <Button
                       variant="secondary"
                       size="sm"
-                      onClick={() => setUnassignTarget({ id_sucursal: s.id_sucursal, nombre: s.nombre_sucursal })}
+                      onClick={() => setUnassignTarget({ id_sucursal: s.id_sucursal, nombre: s.nombre })}
                     >
                       Desasignar
                     </Button>

@@ -12,6 +12,8 @@ export interface Sesion {
   nombre_paciente?: string;
   nombre_terapeuta?: string;
   nombre_sucursal?: string;
+  archivo_nombre: string | null;
+  archivo_path: string | null;
 }
 
 export interface SesionForm {
@@ -31,6 +33,7 @@ export interface SesionInsumo {
   nombre_insumo?: string;
   unidad_medida?: string;
   cantidad_usada: number;
+  fecha_asignacion?: string | null;
 }
 
 export interface SesionInsumoForm {

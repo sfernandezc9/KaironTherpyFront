@@ -30,7 +30,8 @@ export interface TerapeutaForm {
 
 export interface TerapeutaSucursal {
   id_sucursal: number;
-  nombre_sucursal: string;
+  nombre: string;
+  nombre_empresa?: string;
   fecha_inicio: string;
   fecha_fin: string | null;
 }

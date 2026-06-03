@@ -9,6 +9,9 @@ import {
   updateSesion,
   createSesion,
   getStockSucursalSesion,
+  uploadSesionArchivo,
+  downloadSesionArchivo,
+  deleteSesionArchivo,
 } from '../../api/sesiones';
 import { getSucursales, getSucursalStock } from '../../api/sucursales';
 import { getTerapeutas } from '../../api/terapeutas';
@@ -23,7 +26,7 @@ import Badge from '../../components/ui/Badge';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { PageSpinner } from '../../components/ui/Spinner';
 import { useToast } from '../../context/ToastContext';
-import { formatDate } from '../../utils/format';
+import { formatDate, formatDateTime } from '../../utils/format';
 import type { Sesion, SesionForm, SesionFilters, EstadoSesion } from '../../types/sesion';
 
 const ESTADO_OPTIONS = [
@@ -58,6 +61,11 @@ export default function SesionesList() {
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState<SesionForm>(emptySesion);
+
+  const [archivoFile, setArchivoFile] = useState<File | null>(null);
+  const [archivoUploading, setArchivoUploading] = useState(false);
+  const [deleteArchivoTarget, setDeleteArchivoTarget] = useState<number | null>(null);
+  const [deletingArchivo, setDeletingArchivo] = useState(false);
 
   const [addInsumoSucursal, setAddInsumoSucursal] = useState(0);
   const [addInsumoStock, setAddInsumoStock] = useState(0);
@@ -153,6 +161,47 @@ export default function SesionesList() {
     onError: (e: Error) => showToast(e.message, 'error'),
   });
 
+  const handleUploadArchivo = async () => {
+    if (!archivoFile || !selectedSesion) return;
+    setArchivoUploading(true);
+    try {
+      const result = await uploadSesionArchivo(selectedSesion.id_sesion, archivoFile);
+      setSelectedSesion({ ...selectedSesion, archivo_nombre: result.archivo_nombre, archivo_path: result.archivo_path });
+      qc.invalidateQueries({ queryKey: ['sesiones'] });
+      setArchivoFile(null);
+      showToast('Archivo subido correctamente', 'success');
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : 'Error al subir archivo', 'error');
+    } finally {
+      setArchivoUploading(false);
+    }
+  };
+
+  const handleDownloadArchivo = async () => {
+    if (!selectedSesion?.archivo_nombre) return;
+    try {
+      await downloadSesionArchivo(selectedSesion.id_sesion, selectedSesion.archivo_nombre);
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : 'Error al descargar archivo', 'error');
+    }
+  };
+
+  const handleDeleteArchivo = async () => {
+    if (!selectedSesion) return;
+    setDeletingArchivo(true);
+    try {
+      await deleteSesionArchivo(selectedSesion.id_sesion);
+      setSelectedSesion({ ...selectedSesion, archivo_nombre: null, archivo_path: null });
+      qc.invalidateQueries({ queryKey: ['sesiones'] });
+      setDeleteArchivoTarget(null);
+      showToast('Archivo eliminado', 'success');
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : 'Error al eliminar archivo', 'error');
+    } finally {
+      setDeletingArchivo(false);
+    }
+  };
+
   // Sucursal options: admin uses API, terapeuta uses /me sucursales
   const sucursalOptions = isAdmin
     ? (sucursales ?? []).map((s) => ({ value: s.id_sucursal, label: s.nombre }))
@@ -165,7 +214,7 @@ export default function SesionesList() {
 
   const fichaOptions = (fichas ?? []).map((f) => ({
     value: f.id_ficha,
-    label: `Ficha #${f.id_ficha} — Paciente #${f.id_paciente}`,
+    label: f.nombres ? `${f.nombres} ${f.apellidos} — ${f.rut}` : `Ficha #${f.id_ficha} — Paciente #${f.id_paciente}`,
   }));
 
   const stockOptions = (stockSucursal ?? []).map((s) => ({
@@ -242,7 +291,7 @@ export default function SesionesList() {
         columns={columns}
         data={sesiones ?? []}
         keyExtractor={(r) => r.id_sesion}
-        onRowClick={(r) => setSelectedSesion(r)}
+        onRowClick={(r) => { setSelectedSesion(r); setAddInsumoSucursal(r.id_sucursal); setAddInsumoStock(0); }}
         emptyMessage="Sin sesiones"
       />
 
@@ -353,6 +402,48 @@ export default function SesionesList() {
             </div>
           )}
 
+          {/* Archivo adjunto */}
+          <div className="border-t border-slate-200 pt-4 mt-4">
+            <p className="text-sm font-semibold text-slate-800 mb-3">Archivo adjunto</p>
+            {selectedSesion.archivo_nombre ? (
+              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                <span className="text-sm text-slate-700 flex-1 truncate">{selectedSesion.archivo_nombre}</span>
+                <Button size="sm" variant="secondary" onClick={handleDownloadArchivo}>Descargar</Button>
+                <Button size="sm" variant="danger" onClick={() => setDeleteArchivoTarget(selectedSesion.id_sesion)}>Eliminar</Button>
+              </div>
+            ) : archivoFile ? (
+              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <span className="text-sm text-slate-700 flex-1 truncate">{archivoFile.name}</span>
+                <Button size="sm" onClick={handleUploadArchivo} loading={archivoUploading}>Subir</Button>
+                <Button size="sm" variant="ghost" onClick={() => setArchivoFile(null)}>✕</Button>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center gap-1 p-6 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-teal-600 hover:bg-slate-50 transition-colors">
+                <span className="text-sm text-slate-500">Clic para seleccionar un archivo Excel</span>
+                <span className="text-xs text-slate-400">.xlsx / .xls — máx 10 MB</span>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    e.target.value = '';
+                    if (!f) return;
+                    if (!f.name.match(/\.(xlsx|xls)$/i)) {
+                      showToast('Solo se permiten archivos Excel (.xlsx, .xls)', 'error');
+                      return;
+                    }
+                    if (f.size > 10 * 1024 * 1024) {
+                      showToast('El archivo supera el límite de 10 MB', 'error');
+                      return;
+                    }
+                    setArchivoFile(f);
+                  }}
+                />
+              </label>
+            )}
+          </div>
+
           {/* Insumos */}
           <div className="border-t border-slate-200 pt-4 mt-4">
             <p className="text-sm font-semibold text-slate-800 mb-3">Insumos utilizados</p>
@@ -365,7 +456,7 @@ export default function SesionesList() {
                     key={i.id_uso}
                     className="flex items-center justify-between text-sm text-slate-700 bg-slate-50 rounded-lg px-3 py-2"
                   >
-                    <span>{i.nombre_insumo} — {i.cantidad_usada} {i.unidad_medida}</span>
+                    <span>{i.nombre_insumo} — {i.cantidad_usada} {i.unidad_medida}{i.fecha_asignacion ? <span className="ml-2 text-xs text-slate-400">{formatDateTime(i.fecha_asignacion)}</span> : null}</span>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -380,15 +471,6 @@ export default function SesionesList() {
 
             {/* Add insumo */}
             <div className="flex gap-2 items-end">
-              <div className="flex-1">
-                <Select
-                  label="Sucursal del stock"
-                  options={sucursalOptions}
-                  value={addInsumoSucursal || ''}
-                  onChange={(e) => { setAddInsumoSucursal(Number(e.target.value)); setAddInsumoStock(0); }}
-                  placeholder="Sucursal…"
-                />
-              </div>
               <div className="flex-1">
                 <Select
                   label="Insumo"
@@ -439,6 +521,14 @@ export default function SesionesList() {
         onConfirm={() => removeInsumoMut.mutate()}
         onCancel={() => setDeleteInsumoTarget(null)}
         loading={removeInsumoMut.isPending}
+      />
+
+      <ConfirmDialog
+        open={deleteArchivoTarget !== null}
+        message="¿Eliminar el archivo adjunto? No se puede deshacer."
+        onConfirm={handleDeleteArchivo}
+        onCancel={() => setDeleteArchivoTarget(null)}
+        loading={deletingArchivo}
       />
     </div>
   );

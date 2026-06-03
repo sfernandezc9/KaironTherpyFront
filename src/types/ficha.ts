@@ -9,6 +9,9 @@ export interface Ficha {
   observaciones: string;
   fecha_creacion?: string;
   fecha_actualizacion?: string;
+  nombres?: string;
+  apellidos?: string;
+  rut?: string;
 }
 
 export interface FichaForm {

@@ -13,8 +13,8 @@ export const getSesion = async (id: number): Promise<Sesion> => {
 };
 
 export const getSesionInsumos = async (id: number): Promise<SesionInsumo[]> => {
-  const { data } = await client.get<SesionInsumo[]>(`/sesiones/${id}/insumos`);
-  return data;
+  const { data } = await client.get<Array<SesionInsumo & { id?: number }>>(`/sesiones/${id}/insumos`);
+  return data.map((i) => ({ ...i, id_uso: i.id_uso ?? i.id ?? 0 }));
 };
 
 export const createSesion = async (form: SesionForm): Promise<Sesion> => {
@@ -41,6 +41,40 @@ export const removeSesionInsumo = async (id: number, id_uso: number): Promise<vo
 
 export const deleteSesion = async (id: number): Promise<void> => {
   await client.delete(`/sesiones/${id}`);
+};
+
+export const uploadSesionArchivo = async (
+  id: number,
+  file: File
+): Promise<{ archivo_nombre: string; archivo_path: string }> => {
+  const form = new FormData();
+  form.append('archivo', file);
+  const { data } = await client.post(`/sesiones/${id}/archivo`, form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return data;
+};
+
+export const downloadSesionArchivo = async (id: number, archivo_nombre: string): Promise<void> => {
+  const token = localStorage.getItem('token');
+  const res = await fetch(`http://localhost:3000/api/sesiones/${id}/archivo`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw new Error((json as { error?: string }).error ?? 'Error al descargar archivo');
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = archivo_nombre;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+export const deleteSesionArchivo = async (id: number): Promise<void> => {
+  await client.delete(`/sesiones/${id}/archivo`);
 };
 
 export const getStockSucursalSesion = async (id_sucursal: number): Promise<Stock[]> => {
