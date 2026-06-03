@@ -33,18 +33,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="w-12 h-12 bg-primary-800 rounded-xl flex items-center justify-center mx-auto mb-4">
             <span className="text-white text-xl font-bold">K</span>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">KaironTherapy</h1>
-          <p className="text-sm text-slate-500 mt-1">Gestión Clínica</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">KaironTherapy</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Gestión Clínica</p>
         </div>
 
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8">
-          <h2 className="text-lg font-semibold text-slate-800 mb-6">Iniciar sesión</h2>
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm p-8">
+          <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-6">Iniciar sesión</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               label="Email"
@@ -63,7 +63,7 @@ export default function LoginPage() {
               placeholder="••••••••"
             />
             {error && (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg px-3 py-2">
                 {error}
               </p>
             )}

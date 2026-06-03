@@ -118,7 +118,7 @@ export default function EstructuraPage() {
 
   const empresaColumns: Column<Empresa>[] = [
     { key: 'rut', header: 'RUT', sortable: true, accessor: (r) => r.rut, render: (r) => formatRut(r.rut) },
-    { key: 'nombre', header: 'Nombre', sortable: true, accessor: (r) => r.nombre, render: (r) => <span className="font-medium text-slate-900">{r.nombre}</span> },
+    { key: 'nombre', header: 'Nombre', sortable: true, accessor: (r) => r.nombre, render: (r) => <span className="font-medium text-slate-900 dark:text-slate-100">{r.nombre}</span> },
     { key: 'email', header: 'Email', accessor: (r) => r.email },
     { key: 'telefono', header: 'Teléfono', accessor: (r) => r.telefono },
     {
@@ -137,8 +137,8 @@ export default function EstructuraPage() {
   ];
 
   const sucursalColumns: Column<Sucursal>[] = [
-    { key: 'nombre', header: 'Nombre', sortable: true, accessor: (r) => r.nombre, render: (r) => <span className="font-medium text-slate-900">{r.nombre}</span> },
-    { key: 'empresa', header: 'Empresa', sortable: true, accessor: (r) => r.nombre_empresa ?? '', render: (r) => <span className="text-slate-500">{r.nombre_empresa ?? '—'}</span> },
+    { key: 'nombre', header: 'Nombre', sortable: true, accessor: (r) => r.nombre, render: (r) => <span className="font-medium text-slate-900 dark:text-slate-100">{r.nombre}</span> },
+    { key: 'empresa', header: 'Empresa', sortable: true, accessor: (r) => r.nombre_empresa ?? '', render: (r) => <span className="text-slate-500 dark:text-slate-400">{r.nombre_empresa ?? '—'}</span> },
     { key: 'email', header: 'Email', accessor: (r) => r.email },
     { key: 'activa', header: 'Estado', render: (r) => <Badge label={r.activa ? 'Activa' : 'Inactiva'} color={r.activa ? 'green' : 'slate'} dot /> },
     {
@@ -160,7 +160,7 @@ export default function EstructuraPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold text-slate-900 mb-6">Estructura</h1>
+      <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-6">Estructura</h1>
 
       <Tabs tabs={TABS} active={activeTab} onChange={setActiveTab}>
         <TabPanel id="empresas" active={activeTab}>
@@ -179,17 +179,17 @@ export default function EstructuraPage() {
                 emptyMessage="Sin empresas registradas"
               />
               {expandedEmpresa !== null && (
-                <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                  <p className="text-sm font-semibold text-slate-700 mb-3">Sucursales</p>
+                <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Sucursales</p>
                   {!empresaSucursales?.length ? (
-                    <p className="text-sm text-slate-400">Sin sucursales</p>
+                    <p className="text-sm text-slate-400 dark:text-slate-500">Sin sucursales</p>
                   ) : (
                     <ul className="space-y-2">
                       {empresaSucursales.map((s) => (
-                        <li key={s.id_sucursal} className="flex items-center gap-3 text-sm text-slate-700">
+                        <li key={s.id_sucursal} className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
                           <Badge label={s.activa ? 'Activa' : 'Inactiva'} color={s.activa ? 'green' : 'slate'} />
                           <span className="font-medium">{s.nombre}</span>
-                          <span className="text-slate-400">{s.direccion}</span>
+                          <span className="text-slate-400 dark:text-slate-500">{s.direccion}</span>
                         </li>
                       ))}
                     </ul>
@@ -216,17 +216,17 @@ export default function EstructuraPage() {
                 emptyMessage="Sin sucursales"
               />
               {expandedSucursal !== null && (
-                <div className="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
-                  <p className="text-sm font-semibold text-slate-700 mb-3">Terapeutas activos</p>
+                <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Terapeutas activos</p>
                   {!sucursalTerapeutas?.length ? (
-                    <p className="text-sm text-slate-400">Sin terapeutas asignados</p>
+                    <p className="text-sm text-slate-400 dark:text-slate-500">Sin terapeutas asignados</p>
                   ) : (
                     <ul className="space-y-2">
                       {sucursalTerapeutas.map((t) => (
-                        <li key={t.id_terapeuta} className="flex items-center gap-3 text-sm text-slate-700">
+                        <li key={t.id_terapeuta} className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
                           <span className="font-medium">{t.apellidos}, {t.nombres}</span>
-                          <span className="text-slate-400">{t.especialidad}</span>
-                          <span className="text-slate-400">{formatRut(t.rut)}</span>
+                          <span className="text-slate-400 dark:text-slate-500">{t.especialidad}</span>
+                          <span className="text-slate-400 dark:text-slate-500">{formatRut(t.rut)}</span>
                         </li>
                       ))}
                     </ul>

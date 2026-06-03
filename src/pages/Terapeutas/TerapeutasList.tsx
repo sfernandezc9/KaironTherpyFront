@@ -84,7 +84,7 @@ export default function TerapeutasList() {
     {
       key: 'nombre', header: 'Nombre', sortable: true,
       accessor: (r) => `${r.apellidos} ${r.nombres}`,
-      render: (r) => <span className="font-medium text-slate-900">{r.apellidos}, {r.nombres}</span>,
+      render: (r) => <span className="font-medium text-slate-900 dark:text-slate-100">{r.apellidos}, {r.nombres}</span>,
     },
     { key: 'especialidad', header: 'Especialidad', sortable: true, accessor: (r) => r.especialidad },
     { key: 'registro_profesional', header: 'Registro profesional', accessor: (r) => r.registro_profesional },
@@ -100,8 +100,8 @@ export default function TerapeutasList() {
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Terapeutas</h1>
-          <p className="text-sm text-slate-500 mt-1">{filtered.length} terapeutas</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Terapeutas</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{filtered.length} terapeutas</p>
         </div>
         <Button onClick={() => setModalOpen(true)}>+ Nuevo terapeuta</Button>
       </div>
@@ -112,7 +112,7 @@ export default function TerapeutasList() {
           placeholder="Buscar por nombre, RUT o especialidad…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full max-w-md rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="w-full max-w-md rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
         />
       </div>
 

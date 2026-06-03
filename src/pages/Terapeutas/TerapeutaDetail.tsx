@@ -124,7 +124,7 @@ export default function TerapeutaDetail() {
   });
 
   if (isLoading) return <PageSpinner />;
-  if (!terapeuta) return <div className="p-6 text-red-600">Terapeuta no encontrado</div>;
+  if (!terapeuta) return <div className="p-6 text-red-600 dark:text-red-400">Terapeuta no encontrado</div>;
 
   const ef = editForm ?? {
     rut: terapeuta.rut,
@@ -152,12 +152,12 @@ export default function TerapeutaDetail() {
           <button onClick={() => navigate('/terapeutas')} className="text-sm text-primary-800 hover:underline mb-2">
             ← Terapeutas
           </button>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
             {terapeuta.apellidos}, {terapeuta.nombres}
           </h1>
           <div className="flex items-center gap-3 mt-1">
-            <span className="text-sm text-slate-500">{formatRut(terapeuta.rut)}</span>
-            <span className="text-sm text-slate-500">{terapeuta.especialidad}</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">{formatRut(terapeuta.rut)}</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">{terapeuta.especialidad}</span>
             <Badge label={terapeuta.activo ? 'Activo' : 'Inactivo'} color={terapeuta.activo ? 'green' : 'slate'} dot />
           </div>
         </div>
@@ -193,17 +193,17 @@ export default function TerapeutaDetail() {
             <Button onClick={() => setAssignOpen(true)}>+ Asignar sucursal</Button>
           </div>
           {!sucursalesAsig?.length ? (
-            <p className="text-slate-500">Sin sucursales asignadas.</p>
+            <p className="text-slate-500 dark:text-slate-400">Sin sucursales asignadas.</p>
           ) : (
             <div className="space-y-2">
               {sucursalesAsig.map((s) => (
-                <div key={s.id_sucursal} className="flex items-center justify-between px-4 py-3 border border-slate-200 rounded-lg bg-white">
+                <div key={s.id_sucursal} className="flex items-center justify-between px-4 py-3 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800">
                   <div>
-                    <p className="text-sm font-medium text-slate-800">{s.nombre}</p>
+                    <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{s.nombre}</p>
                     {s.nombre_empresa && (
-                      <p className="text-xs text-slate-400">{s.nombre_empresa}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500">{s.nombre_empresa}</p>
                     )}
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       Desde {formatDate(s.fecha_inicio)}
                       {s.fecha_fin ? ` · Hasta ${formatDate(s.fecha_fin)}` : ' · Activo'}
                     </p>
@@ -231,21 +231,21 @@ export default function TerapeutaDetail() {
           {loadingS ? (
             <PageSpinner />
           ) : !sesiones?.length ? (
-            <p className="text-slate-500">Sin sesiones en el período.</p>
+            <p className="text-slate-500 dark:text-slate-400">Sin sesiones en el período.</p>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-slate-200">
+            <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
               <table className="min-w-full text-sm">
-                <thead className="bg-slate-50 border-b border-slate-200">
+                <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Fecha</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Paciente</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Duración</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide">Estado</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Fecha</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Paciente</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Duración</th>
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Estado</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
                   {sesiones.map((s) => (
-                    <tr key={s.id_sesion} className="hover:bg-slate-50">
+                    <tr key={s.id_sesion} className="hover:bg-slate-50 dark:hover:bg-slate-800">
                       <td className="px-4 py-3">{formatDate(s.fecha)}</td>
                       <td className="px-4 py-3">{s.nombre_paciente ?? '—'}</td>
                       <td className="px-4 py-3">{s.duracion_minutos} min</td>

@@ -125,7 +125,7 @@ export default function PacienteDetail() {
   });
 
   if (loadingP) return <PageSpinner />;
-  if (!paciente) return <div className="p-6 text-red-600">Paciente no encontrado</div>;
+  if (!paciente) return <div className="p-6 text-red-600 dark:text-red-400">Paciente no encontrado</div>;
 
   const df = datosForm ?? {
     rut: paciente.rut,
@@ -170,11 +170,11 @@ export default function PacienteDetail() {
           <button onClick={() => navigate('/pacientes')} className="text-sm text-primary-800 hover:underline mb-2 flex items-center gap-1">
             ← Pacientes
           </button>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
             {paciente.apellidos}, {paciente.nombres}
           </h1>
           <div className="flex items-center gap-3 mt-1">
-            <span className="text-sm text-slate-500">{formatRut(paciente.rut)}</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">{formatRut(paciente.rut)}</span>
             <Badge label={paciente.activo ? 'Activo' : 'Inactivo'} color={paciente.activo ? 'green' : 'slate'} dot />
           </div>
         </div>
@@ -214,7 +214,7 @@ export default function PacienteDetail() {
             <PageSpinner />
           ) : !ficha ? (
             <>
-              <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+              <div className="text-sm text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-3 mb-4">
                 Este paciente no tiene ficha clínica. Completa los datos y créala para poder registrar sesiones.
               </div>
               <div className="grid grid-cols-1 gap-4 mb-4">
@@ -278,25 +278,25 @@ export default function PacienteDetail() {
               {/* Historial */}
               {historial && historial.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-700 mb-4">Historial de cambios</h3>
-                  <div className="relative pl-6 border-l-2 border-slate-200 space-y-4">
+                  <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-4">Historial de cambios</h3>
+                  <div className="relative pl-6 border-l-2 border-slate-200 dark:border-slate-700 space-y-4">
                     {historial.map((h) => (
                       <div key={h.id_historial} className="relative">
-                        <div className="absolute -left-[25px] top-1 w-3 h-3 rounded-full bg-primary-800 border-2 border-white" />
-                        <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                        <div className="absolute -left-[25px] top-1 w-3 h-3 rounded-full bg-primary-800 border-2 border-white dark:border-slate-900" />
+                        <div className="bg-slate-50 dark:bg-slate-800 rounded-lg p-3 border border-slate-200 dark:border-slate-700">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-semibold text-primary-800 uppercase">{h.campo_modificado}</span>
-                            <span className="text-xs text-slate-400">{formatDateTime(h.fecha_modificacion)}</span>
+                            <span className="text-xs font-semibold text-primary-800 dark:text-primary-300 uppercase">{h.campo_modificado}</span>
+                            <span className="text-xs text-slate-400 dark:text-slate-500">{formatDateTime(h.fecha_modificacion)}</span>
                           </div>
-                          <p className="text-xs text-slate-500">Por: {h.nombre_terapeuta ?? `Terapeuta #${h.id_terapeuta}`}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">Por: {h.nombre_terapeuta ?? `Terapeuta #${h.id_terapeuta}`}</p>
                           <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
-                            <div className="bg-red-50 rounded px-2 py-1">
-                              <span className="text-red-600 font-medium">Anterior: </span>
-                              <span className="text-slate-600">{h.valor_anterior || '(vacío)'}</span>
+                            <div className="bg-red-50 dark:bg-red-900/20 rounded px-2 py-1">
+                              <span className="text-red-600 dark:text-red-400 font-medium">Anterior: </span>
+                              <span className="text-slate-600 dark:text-slate-300">{h.valor_anterior || '(vacío)'}</span>
                             </div>
-                            <div className="bg-green-50 rounded px-2 py-1">
-                              <span className="text-green-600 font-medium">Nuevo: </span>
-                              <span className="text-slate-600">{h.valor_nuevo || '(vacío)'}</span>
+                            <div className="bg-green-50 dark:bg-green-900/20 rounded px-2 py-1">
+                              <span className="text-green-600 dark:text-green-400 font-medium">Nuevo: </span>
+                              <span className="text-slate-600 dark:text-slate-300">{h.valor_nuevo || '(vacío)'}</span>
                             </div>
                           </div>
                         </div>
@@ -312,7 +312,7 @@ export default function PacienteDetail() {
         {/* Sesiones */}
         <TabPanel id="sesiones" active={activeTab}>
           {!ficha && !loadingF ? (
-            <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg p-3">
+            <div className="text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-3">
               Este paciente no tiene ficha clínica. Créala primero en el tab "Ficha clínica" para poder registrar sesiones.
             </div>
           ) : loadingS ? (
@@ -363,14 +363,14 @@ function SesionRow({
   });
 
   return (
-    <div className="border border-slate-200 rounded-lg overflow-hidden">
+    <div className="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden">
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-4 py-3 bg-white hover:bg-slate-50 text-left"
+        className="w-full flex items-center justify-between px-4 py-3 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-left"
       >
         <div className="flex items-center gap-4">
-          <span className="text-sm font-medium text-slate-800">{formatDate(sesion.fecha)}</span>
-          <span className="text-xs text-slate-500">{sesion.duracion_minutos} min</span>
+          <span className="text-sm font-medium text-slate-800 dark:text-slate-100">{formatDate(sesion.fecha)}</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">{sesion.duracion_minutos} min</span>
           <Badge
             label={sesion.estado.charAt(0).toUpperCase() + sesion.estado.slice(1)}
             color={ESTADO_COLORS[sesion.estado]}
@@ -380,21 +380,21 @@ function SesionRow({
         <span className="text-slate-400">{expanded ? '▲' : '▼'}</span>
       </button>
       {expanded && (
-        <div className="px-4 pb-4 bg-slate-50 border-t border-slate-200">
+        <div className="px-4 pb-4 bg-slate-50 dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700">
           {sesion.notas_sesion && (
             <div className="mt-3">
-              <p className="text-xs font-semibold text-slate-600 uppercase mb-1">Notas</p>
-              <p className="text-sm text-slate-700">{sesion.notas_sesion}</p>
+              <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Notas</p>
+              <p className="text-sm text-slate-700 dark:text-slate-300">{sesion.notas_sesion}</p>
             </div>
           )}
           <div className="mt-3">
-            <p className="text-xs font-semibold text-slate-600 uppercase mb-1">Insumos usados</p>
+            <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase mb-1">Insumos usados</p>
             {!insumos?.length ? (
-              <p className="text-xs text-slate-400">Sin insumos registrados</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500">Sin insumos registrados</p>
             ) : (
               <ul className="space-y-1">
                 {insumos.map((i) => (
-                  <li key={i.id_uso} className="text-xs text-slate-700">
+                  <li key={i.id_uso} className="text-xs text-slate-700 dark:text-slate-300">
                     {i.nombre_insumo} — {i.cantidad_usada} {i.unidad_medida}
                   </li>
                 ))}

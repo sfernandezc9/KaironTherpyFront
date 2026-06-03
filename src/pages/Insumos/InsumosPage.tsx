@@ -234,7 +234,7 @@ export default function InsumosPage() {
 
   const stockSucursalColumns: Column<Stock>[] = [
     { key: 'insumo', header: 'Insumo', sortable: true, accessor: (r) => r.nombre_insumo ?? '', render: (r) => r.nombre_insumo ?? '—' },
-    { key: 'sucursal', header: 'Sucursal', sortable: true, accessor: (r) => r.nombre_sucursal ?? '', render: (r) => <span className="text-slate-500">{r.nombre_sucursal ?? '—'}</span> },
+    { key: 'sucursal', header: 'Sucursal', sortable: true, accessor: (r) => r.nombre_sucursal ?? '', render: (r) => <span className="text-slate-500 dark:text-slate-400">{r.nombre_sucursal ?? '—'}</span> },
     {
       key: 'cantidad', header: 'Cantidad', sortable: true, accessor: (r) => r.cantidad,
       render: (r) => (
@@ -260,7 +260,7 @@ export default function InsumosPage() {
               max={r.cantidad}
               value={merma}
               onChange={(e) => setMermaValues({ ...mermaValues, [r.id_stock]: Math.max(1, Number(e.target.value)) })}
-              className={`w-14 border rounded px-2 py-1 text-sm text-center ${excede ? 'border-red-400 bg-red-50' : 'border-slate-300'}`}
+              className={`w-14 border rounded px-2 py-1 text-sm text-center bg-white dark:bg-slate-800 dark:text-slate-100 ${excede ? 'border-red-400 dark:border-red-600 bg-red-50 dark:bg-red-900/20' : 'border-slate-300 dark:border-slate-600'}`}
             />
             <Button
               variant="danger"
@@ -290,7 +290,7 @@ export default function InsumosPage() {
     {
       key: 'cantidad', header: 'Cantidad disponible', sortable: true, accessor: (r) => r.cantidad,
       render: (r) => (
-        <span className="font-semibold text-slate-900">{r.cantidad} <span className="font-normal text-slate-400 text-xs">{r.unidad_medida}</span></span>
+        <span className="font-semibold text-slate-900 dark:text-slate-100">{r.cantidad} <span className="font-normal text-slate-400 dark:text-slate-500 text-xs">{r.unidad_medida}</span></span>
       ),
     },
     { key: 'minimo', header: 'Stock mínimo', sortable: true, accessor: (r) => r.cantidad_minima, render: (r) => r.cantidad_minima },
@@ -317,16 +317,16 @@ export default function InsumosPage() {
     { key: 'unidad', header: 'Unidad', accessor: (r) => r.unidad_medida },
     {
       key: 'cantidad', header: 'Cantidad', sortable: true, accessor: (r) => r.cantidad,
-      render: (r) => <span className="font-medium">{r.cantidad} <span className="text-slate-400 text-xs">{r.unidad_medida}</span></span>,
+      render: (r) => <span className="font-medium dark:text-slate-100">{r.cantidad} <span className="text-slate-400 dark:text-slate-500 text-xs">{r.unidad_medida}</span></span>,
     },
     { key: 'sucursal', header: 'Sucursal destino', sortable: true, accessor: (r) => r.nombre_sucursal },
     { key: 'realizado_por', header: 'Realizado por', accessor: (r) => r.realizado_por },
-    { key: 'notas', header: 'Notas', accessor: (r) => r.notas ?? '', render: (r) => <span className="text-slate-500 text-sm">{r.notas ?? '—'}</span> },
+    { key: 'notas', header: 'Notas', accessor: (r) => r.notas ?? '', render: (r) => <span className="text-slate-500 dark:text-slate-400 text-sm">{r.notas ?? '—'}</span> },
   ];
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold text-slate-900 mb-6">Insumos & Stock</h1>
+      <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-6">Insumos & Stock</h1>
 
       <Tabs tabs={TABS} active={activeTab} onChange={setActiveTab}>
 
@@ -348,14 +348,14 @@ export default function InsumosPage() {
             <select
               value={filterSucursal}
               onChange={(e) => setFilterSucursal(e.target.value)}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="">Todas las sucursales</option>
               {sucursalOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
             <Button onClick={() => setStockModalOpen(true)}>+ Crear registro sucursal</Button>
           </div>
-          <p className="text-xs text-slate-400 mb-3">
+          <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">
             Para aumentar stock de una sucursal, use <strong>Transferir</strong> desde el stock proveedor. Solo se permite registrar mermas aquí.
           </p>
           {loadingS ? <PageSpinner /> : (
@@ -366,7 +366,7 @@ export default function InsumosPage() {
         {/* ── Stock Proveedor ── */}
         <TabPanel id="stock-proveedor" active={activeTab}>
           <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
-            <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300 cursor-pointer">
               <input
                 type="checkbox"
                 checked={showBajoMinimo}
@@ -390,7 +390,7 @@ export default function InsumosPage() {
             <select
               value={transFilters.id_sucursal ?? ''}
               onChange={(e) => setTransFilters({ ...transFilters, id_sucursal: e.target.value ? Number(e.target.value) : undefined })}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="">Todas las sucursales</option>
               {sucursalOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -398,7 +398,7 @@ export default function InsumosPage() {
             <select
               value={transFilters.id_insumo ?? ''}
               onChange={(e) => setTransFilters({ ...transFilters, id_insumo: e.target.value ? Number(e.target.value) : undefined })}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
             >
               <option value="">Todos los insumos</option>
               {insumoOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -407,13 +407,13 @@ export default function InsumosPage() {
               type="date"
               value={transFilters.desde ?? ''}
               onChange={(e) => setTransFilters({ ...transFilters, desde: e.target.value || undefined })}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             <input
               type="date"
               value={transFilters.hasta ?? ''}
               onChange={(e) => setTransFilters({ ...transFilters, hasta: e.target.value || undefined })}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             {Object.values(transFilters).some(Boolean) && (
               <Button variant="ghost" size="sm" onClick={() => setTransFilters({})}>Limpiar filtros</Button>
@@ -442,7 +442,7 @@ export default function InsumosPage() {
 
       {/* ── Modal: Crear registro stock sucursal ── */}
       <Modal open={stockModalOpen} onClose={() => setStockModalOpen(false)} title="Crear registro de stock sucursal" size="sm">
-        <p className="text-sm text-slate-500 mb-4">
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
           Crea el registro de stock para una sucursal. La cantidad inicial será 0; para cargar stock use <strong>Transferir</strong> desde el proveedor.
         </p>
         <div className="space-y-4">
@@ -485,10 +485,10 @@ export default function InsumosPage() {
       <Modal open={ingresarOpen} onClose={() => setIngresarOpen(false)} title="Ingresar mercadería" size="sm">
         {ingresarTarget && (
           <>
-            <div className="bg-slate-50 rounded-lg px-4 py-3 mb-4 text-sm">
-              <span className="font-medium">{ingresarTarget.nombre_insumo}</span>
-              <span className="text-slate-400 ml-2">{ingresarTarget.unidad_medida}</span>
-              <p className="text-slate-500 mt-1">Stock actual: <strong>{ingresarTarget.cantidad}</strong></p>
+            <div className="bg-slate-50 dark:bg-slate-800 rounded-lg px-4 py-3 mb-4 text-sm">
+              <span className="font-medium dark:text-slate-100">{ingresarTarget.nombre_insumo}</span>
+              <span className="text-slate-400 dark:text-slate-500 ml-2">{ingresarTarget.unidad_medida}</span>
+              <p className="text-slate-500 dark:text-slate-400 mt-1">Stock actual: <strong>{ingresarTarget.cantidad}</strong></p>
             </div>
             <Input
               label="Cantidad a ingresar"
@@ -514,16 +514,16 @@ export default function InsumosPage() {
       <Modal open={transferOpen} onClose={closeTransferModal} title="Transferir a sucursal" size="sm">
         {transferProveedor && (
           <>
-            <div className="bg-slate-50 rounded-lg px-4 py-3 mb-4 text-sm">
-              <span className="font-medium">{transferProveedor.nombre_insumo}</span>
-              <span className="text-slate-400 ml-2">{transferProveedor.unidad_medida}</span>
-              <p className="text-slate-500 mt-1">
+            <div className="bg-slate-50 dark:bg-slate-800 rounded-lg px-4 py-3 mb-4 text-sm">
+              <span className="font-medium dark:text-slate-100">{transferProveedor.nombre_insumo}</span>
+              <span className="text-slate-400 dark:text-slate-500 ml-2">{transferProveedor.unidad_medida}</span>
+              <p className="text-slate-500 dark:text-slate-400 mt-1">
                 Disponible en proveedor: <strong className={transferProveedor.cantidad === 0 ? 'text-red-600' : 'text-green-700'}>{transferProveedor.cantidad}</strong>
               </p>
             </div>
 
             {transferDestOptions.length === 0 ? (
-              <p className="text-sm text-amber-700 bg-amber-50 rounded-lg px-4 py-3 mb-4">
+              <p className="text-sm text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded-lg px-4 py-3 mb-4">
                 No hay registros de stock sucursal para <strong>{transferProveedor.nombre_insumo}</strong>. Crea uno primero en la pestaña <em>Stock Sucursales</em>.
               </p>
             ) : (
@@ -545,12 +545,12 @@ export default function InsumosPage() {
                   onChange={(e) => setTransferCantidad(Math.min(transferProveedor.cantidad, Math.max(1, Number(e.target.value))))}
                 />
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Notas (opcional)</label>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Notas (opcional)</label>
                   <textarea
                     value={transferNotas}
                     onChange={(e) => setTransferNotas(e.target.value)}
                     rows={2}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
                     placeholder="Motivo de la transferencia…"
                   />
                 </div>

@@ -51,16 +51,16 @@ export default function Table<T>({
   });
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-slate-200">
+    <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
       <table className="min-w-full text-sm">
-        <thead className="bg-slate-50 border-b border-slate-200">
+        <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
           <tr>
             {columns.map((col) => (
               <th
                 key={col.key}
                 onClick={() => handleSort(col)}
-                className={`px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wide select-none ${
-                  col.sortable ? 'cursor-pointer hover:text-primary-800' : ''
+                className={`px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide select-none ${
+                  col.sortable ? 'cursor-pointer hover:text-primary-800 dark:hover:text-primary-300' : ''
                 }`}
               >
                 {col.header}
@@ -71,12 +71,12 @@ export default function Table<T>({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100 bg-white">
+        <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
           {sorted.length === 0 ? (
             <tr>
               <td
                 colSpan={columns.length}
-                className="px-4 py-10 text-center text-slate-400"
+                className="px-4 py-10 text-center text-slate-400 dark:text-slate-500"
               >
                 {emptyMessage}
               </td>
@@ -86,10 +86,10 @@ export default function Table<T>({
               <tr
                 key={keyExtractor(row)}
                 onClick={() => onRowClick?.(row)}
-                className={`${onRowClick ? 'cursor-pointer hover:bg-slate-50' : ''} transition-colors`}
+                className={`${onRowClick ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800' : ''} transition-colors`}
               >
                 {columns.map((col) => (
-                  <td key={col.key} className="px-4 py-3 text-slate-700">
+                  <td key={col.key} className="px-4 py-3 text-slate-700 dark:text-slate-300">
                     {col.render ? col.render(row) : col.accessor ? String(col.accessor(row) ?? '—') : '—'}
                   </td>
                 ))}

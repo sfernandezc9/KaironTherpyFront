@@ -98,7 +98,7 @@ export default function PacientesList() {
       sortable: true,
       accessor: (r) => `${r.apellidos} ${r.nombres}`,
       render: (r) => (
-        <span className="font-medium text-slate-900">
+        <span className="font-medium text-slate-900 dark:text-slate-100">
           {r.apellidos}, {r.nombres}
         </span>
       ),
@@ -116,7 +116,7 @@ export default function PacientesList() {
       header: 'Sucursal',
       sortable: true,
       accessor: (r) => r.nombre_sucursal ?? '',
-      render: (r) => <span className="text-slate-500">{r.nombre_sucursal ?? '—'}</span>,
+      render: (r) => <span className="text-slate-500 dark:text-slate-400">{r.nombre_sucursal ?? '—'}</span>,
     },
     {
       key: 'activo',
@@ -138,8 +138,8 @@ export default function PacientesList() {
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Pacientes</h1>
-          <p className="text-sm text-slate-500 mt-1">{filtered.length} pacientes</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Pacientes</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{filtered.length} pacientes</p>
         </div>
         {isAdmin && <Button onClick={() => setModalOpen(true)}>+ Nuevo paciente</Button>}
       </div>
@@ -151,12 +151,12 @@ export default function PacientesList() {
           placeholder="Buscar por nombre o RUT…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 min-w-48 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="flex-1 min-w-48 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
         />
         <select
           value={filterSucursal}
           onChange={(e) => setFilterSucursal(e.target.value)}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
         >
           <option value="">Todas las sucursales</option>
           {sucursalOptions.map((o) => (
@@ -166,7 +166,7 @@ export default function PacientesList() {
         <select
           value={filterActivo}
           onChange={(e) => setFilterActivo(e.target.value)}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
         >
           <option value="">Todos los estados</option>
           <option value="true">Activos</option>

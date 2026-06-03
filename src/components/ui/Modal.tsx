@@ -35,13 +35,13 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: M
         onClick={onClose}
       />
       <div
-        className={`relative bg-white rounded-xl shadow-2xl w-full ${sizes[size]} max-h-[90vh] flex flex-col`}
+        className={`relative bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full ${sizes[size]} max-h-[90vh] flex flex-col`}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-          <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-700">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{title}</h2>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 text-xl leading-none"
+            className="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 text-xl leading-none"
           >
             ✕
           </button>

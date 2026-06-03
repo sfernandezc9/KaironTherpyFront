@@ -1,0 +1,8 @@
+{
+  "files": ["index.html"],
+  "insertBefore": "</body>",
+  "commentSyntax": "html",
+  "cspChecked": true,
+  "framework": "vite-spa",
+  "devServer": "http://localhost:5173"
+}

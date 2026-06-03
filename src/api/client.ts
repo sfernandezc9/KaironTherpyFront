@@ -15,6 +15,9 @@ client.interceptors.response.use(
       return Promise.reject(new Error('Sesión expirada'));
     }
     if (err.response?.status === 403) {
+      localStorage.removeItem('token');
+      delete client.defaults.headers.common['Authorization'];
+      window.location.href = '/login';
       return Promise.reject(new Error('Acceso denegado'));
     }
     const message = err.response?.data?.error ?? err.message ?? 'Error desconocido';

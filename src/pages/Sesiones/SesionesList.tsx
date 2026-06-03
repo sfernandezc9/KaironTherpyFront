@@ -226,7 +226,7 @@ export default function SesionesList() {
     { key: 'fecha', header: 'Fecha', sortable: true, accessor: (r) => r.fecha, render: (r) => formatDate(r.fecha) },
     { key: 'paciente', header: 'Paciente', sortable: true, accessor: (r) => r.nombre_paciente ?? '', render: (r) => r.nombre_paciente ?? '—' },
     { key: 'terapeuta', header: 'Terapeuta', sortable: true, accessor: (r) => r.nombre_terapeuta ?? '', render: (r) => r.nombre_terapeuta ?? '—' },
-    { key: 'sucursal', header: 'Sucursal', accessor: (r) => r.nombre_sucursal ?? '', render: (r) => <span className="text-slate-500">{r.nombre_sucursal ?? '—'}</span> },
+    { key: 'sucursal', header: 'Sucursal', accessor: (r) => r.nombre_sucursal ?? '', render: (r) => <span className="text-slate-500 dark:text-slate-400">{r.nombre_sucursal ?? '—'}</span> },
     { key: 'duracion', header: 'Duración', accessor: (r) => r.duracion_minutos, render: (r) => `${r.duracion_minutos} min` },
     {
       key: 'estado',
@@ -240,16 +240,16 @@ export default function SesionesList() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex items-start justify-between mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Sesiones</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Sesiones</h1>
         <Button onClick={() => { setCreateForm(emptySesion); setCreateOpen(true); }}>+ Nueva sesión</Button>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3 mb-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
+      <div className="flex flex-wrap gap-3 mb-6 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
         <select
           value={filters.id_sucursal ?? ''}
           onChange={(e) => setFilters({ ...filters, id_sucursal: e.target.value ? Number(e.target.value) : undefined })}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           <option value="">Todas las sucursales</option>
           {sucursalOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -258,7 +258,7 @@ export default function SesionesList() {
           <select
             value={filters.id_terapeuta ?? ''}
             onChange={(e) => setFilters({ ...filters, id_terapeuta: e.target.value ? Number(e.target.value) : undefined })}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
           >
             <option value="">Todos los terapeutas</option>
             {terapeutaOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -267,7 +267,7 @@ export default function SesionesList() {
         <select
           value={filters.estado ?? ''}
           onChange={(e) => setFilters({ ...filters, estado: (e.target.value as EstadoSesion) || undefined })}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           <option value="">Todos los estados</option>
           {ESTADO_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -276,13 +276,13 @@ export default function SesionesList() {
           type="date"
           value={filters.desde ?? ''}
           onChange={(e) => setFilters({ ...filters, desde: e.target.value || undefined })}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
         <input
           type="date"
           value={filters.hasta ?? ''}
           onChange={(e) => setFilters({ ...filters, hasta: e.target.value || undefined })}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
         />
         <Button variant="ghost" size="sm" onClick={() => setFilters({})}>Limpiar</Button>
       </div>
@@ -365,20 +365,20 @@ export default function SesionesList() {
         >
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Paciente</p>
-              <p className="text-sm text-slate-800">{selectedSesion.nombre_paciente ?? '—'}</p>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Paciente</p>
+              <p className="text-sm text-slate-800 dark:text-slate-100">{selectedSesion.nombre_paciente ?? '—'}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Terapeuta</p>
-              <p className="text-sm text-slate-800">{selectedSesion.nombre_terapeuta ?? '—'}</p>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Terapeuta</p>
+              <p className="text-sm text-slate-800 dark:text-slate-100">{selectedSesion.nombre_terapeuta ?? '—'}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Sucursal</p>
-              <p className="text-sm text-slate-800">{selectedSesion.nombre_sucursal ?? '—'}</p>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Sucursal</p>
+              <p className="text-sm text-slate-800 dark:text-slate-100">{selectedSesion.nombre_sucursal ?? '—'}</p>
             </div>
             <div>
-              <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Duración</p>
-              <p className="text-sm text-slate-800">{selectedSesion.duracion_minutos} min</p>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Duración</p>
+              <p className="text-sm text-slate-800 dark:text-slate-100">{selectedSesion.duracion_minutos} min</p>
             </div>
           </div>
 
@@ -397,30 +397,30 @@ export default function SesionesList() {
 
           {selectedSesion.notas_sesion && (
             <div className="mb-4">
-              <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Notas</p>
-              <p className="text-sm text-slate-700">{selectedSesion.notas_sesion}</p>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Notas</p>
+              <p className="text-sm text-slate-700 dark:text-slate-300">{selectedSesion.notas_sesion}</p>
             </div>
           )}
 
           {/* Archivo adjunto */}
-          <div className="border-t border-slate-200 pt-4 mt-4">
-            <p className="text-sm font-semibold text-slate-800 mb-3">Archivo adjunto</p>
+          <div className="border-t border-slate-200 dark:border-slate-700 pt-4 mt-4">
+            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-3">Archivo adjunto</p>
             {selectedSesion.archivo_nombre ? (
-              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
-                <span className="text-sm text-slate-700 flex-1 truncate">{selectedSesion.archivo_nombre}</span>
+              <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+                <span className="text-sm text-slate-700 dark:text-slate-300 flex-1 truncate">{selectedSesion.archivo_nombre}</span>
                 <Button size="sm" variant="secondary" onClick={handleDownloadArchivo}>Descargar</Button>
                 <Button size="sm" variant="danger" onClick={() => setDeleteArchivoTarget(selectedSesion.id_sesion)}>Eliminar</Button>
               </div>
             ) : archivoFile ? (
-              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <span className="text-sm text-slate-700 flex-1 truncate">{archivoFile.name}</span>
+              <div className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+                <span className="text-sm text-slate-700 dark:text-slate-300 flex-1 truncate">{archivoFile.name}</span>
                 <Button size="sm" onClick={handleUploadArchivo} loading={archivoUploading}>Subir</Button>
                 <Button size="sm" variant="ghost" onClick={() => setArchivoFile(null)}>✕</Button>
               </div>
             ) : (
-              <label className="flex flex-col items-center gap-1 p-6 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-teal-600 hover:bg-slate-50 transition-colors">
-                <span className="text-sm text-slate-500">Clic para seleccionar un archivo Excel</span>
-                <span className="text-xs text-slate-400">.xlsx / .xls — máx 10 MB</span>
+              <label className="flex flex-col items-center gap-1 p-6 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg cursor-pointer hover:border-teal-600 dark:hover:border-teal-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                <span className="text-sm text-slate-500 dark:text-slate-400">Clic para seleccionar un archivo Excel</span>
+                <span className="text-xs text-slate-400 dark:text-slate-500">.xlsx / .xls — máx 10 MB</span>
                 <input
                   type="file"
                   accept=".xlsx,.xls"
@@ -445,16 +445,16 @@ export default function SesionesList() {
           </div>
 
           {/* Insumos */}
-          <div className="border-t border-slate-200 pt-4 mt-4">
-            <p className="text-sm font-semibold text-slate-800 mb-3">Insumos utilizados</p>
+          <div className="border-t border-slate-200 dark:border-slate-700 pt-4 mt-4">
+            <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-3">Insumos utilizados</p>
             {!insumos?.length ? (
-              <p className="text-xs text-slate-400 mb-3">Sin insumos registrados</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 mb-3">Sin insumos registrados</p>
             ) : (
               <ul className="space-y-2 mb-3">
                 {insumos.map((i) => (
                   <li
                     key={i.id_uso}
-                    className="flex items-center justify-between text-sm text-slate-700 bg-slate-50 rounded-lg px-3 py-2"
+                    className="flex items-center justify-between text-sm text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 rounded-lg px-3 py-2"
                   >
                     <span>{i.nombre_insumo} — {i.cantidad_usada} {i.unidad_medida}{i.fecha_asignacion ? <span className="ml-2 text-xs text-slate-400">{formatDateTime(i.fecha_asignacion)}</span> : null}</span>
                     <Button
@@ -494,7 +494,7 @@ export default function SesionesList() {
             </div>
           </div>
 
-          <div className="flex justify-between mt-6 pt-4 border-t border-slate-200">
+          <div className="flex justify-between mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
             {isAdmin && (
               <Button variant="danger" onClick={() => setDeleteTarget(selectedSesion.id_sesion)}>
                 Eliminar sesión

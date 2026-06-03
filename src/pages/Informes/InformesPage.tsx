@@ -90,7 +90,7 @@ export default function InformesPage() {
   };
 
   const columns: Column<Informe>[] = [
-    { key: 'titulo', header: 'Título', sortable: true, accessor: (r) => r.titulo, render: (r) => <span className="font-medium text-slate-900">{r.titulo}</span> },
+    { key: 'titulo', header: 'Título', sortable: true, accessor: (r) => r.titulo, render: (r) => <span className="font-medium text-slate-900 dark:text-slate-100">{r.titulo}</span> },
     { key: 'tipo', header: 'Tipo', sortable: true, accessor: (r) => r.tipo, render: (r) => <span className="capitalize">{r.tipo}</span> },
     { key: 'desde', header: 'Período desde', sortable: true, accessor: (r) => r.fecha_desde, render: (r) => formatDate(r.fecha_desde) },
     { key: 'hasta', header: 'Hasta', sortable: true, accessor: (r) => r.fecha_hasta, render: (r) => formatDate(r.fecha_hasta) },
@@ -117,7 +117,7 @@ export default function InformesPage() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex items-start justify-between mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">Informes</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Informes</h1>
         <Button onClick={() => { setEditingInforme(null); setForm(emptyForm); setModalOpen(true); }}>+ Nuevo informe</Button>
       </div>
 
@@ -125,7 +125,7 @@ export default function InformesPage() {
         <select
           value={filterTipo}
           onChange={(e) => setFilterTipo(e.target.value as TipoInforme | '')}
-          className="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
         >
           <option value="">Todos los tipos</option>
           {TIPO_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}

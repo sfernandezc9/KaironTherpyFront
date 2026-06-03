@@ -5,9 +5,9 @@ export default function Layout({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-white overflow-hidden">
+    <div className="flex h-screen bg-white dark:bg-slate-950 overflow-hidden">
       {/* Desktop sidebar */}
-      <div className="hidden md:flex w-56 flex-shrink-0 flex-col border-r border-slate-200">
+      <div className="hidden md:flex w-56 flex-shrink-0 flex-col border-r border-slate-200 dark:border-slate-700">
         <Sidebar />
       </div>
 
@@ -27,17 +27,17 @@ export default function Layout({ children }: { children: ReactNode }) {
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile header */}
-        <header className="md:hidden flex items-center gap-3 px-4 py-3 border-b border-slate-200 bg-white">
+        <header className="md:hidden flex items-center gap-3 px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
           <button
             onClick={() => setMobileOpen(true)}
-            className="p-1 text-slate-600 hover:text-slate-900"
+            className="p-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
           >
             <span className="text-xl">☰</span>
           </button>
           <p className="text-sm font-bold text-primary-800">KaironTherapy</p>
         </header>
 
-        <main className="flex-1 overflow-y-auto bg-white">
+        <main className="flex-1 overflow-y-auto bg-white dark:bg-slate-950">
           {children}
         </main>
       </div>
