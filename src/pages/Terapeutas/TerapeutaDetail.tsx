@@ -20,7 +20,8 @@ import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { PageSpinner } from '../../components/ui/Spinner';
 import { useToast } from '../../context/ToastContext';
-import { formatRut, formatDate, formatDateInput } from '../../utils/format';
+import { formatRut, formatDate, formatDateInput, validateRut } from '../../utils/format';
+import { NACIONALIDAD_OPTIONS } from '../../utils/nacionalidades';
 import type { TerapeutaForm } from '../../types/terapeuta';
 
 const TABS = [
@@ -30,9 +31,11 @@ const TABS = [
 ];
 
 const GENERO_OPTIONS = [
-  { value: 'M', label: 'Masculino' },
-  { value: 'F', label: 'Femenino' },
-  { value: 'O', label: 'Otro' },
+  { value: 'Hombre', label: 'Hombre' },
+  { value: 'Mujer', label: 'Mujer' },
+  { value: 'Transfemenino', label: 'Transfemenino' },
+  { value: 'No binario', label: 'No binario' },
+  { value: 'Otro', label: 'Otro' },
 ];
 
 const ESTADO_COLORS: Record<string, 'green' | 'yellow' | 'red'> = {
@@ -80,6 +83,7 @@ export default function TerapeutaDetail() {
   });
 
   const [editForm, setEditForm] = useState<Partial<TerapeutaForm> | null>(null);
+  const [editRutError, setEditRutError] = useState('');
 
   const updateMut = useMutation({
     mutationFn: (form: Partial<TerapeutaForm>) => updateTerapeuta(tid, form),
@@ -135,7 +139,10 @@ export default function TerapeutaDetail() {
     telefono: terapeuta.telefono,
     email: terapeuta.email,
     direccion: terapeuta.direccion,
-    especialidad: terapeuta.especialidad,
+    nacionalidad: terapeuta.nacionalidad ?? '',
+    especialidad_1: terapeuta.especialidad_1,
+    especialidad_2: terapeuta.especialidad_2 ?? '',
+    especialidad_3: terapeuta.especialidad_3 ?? '',
     registro_profesional: terapeuta.registro_profesional,
     activo: terapeuta.activo,
   };
@@ -157,7 +164,11 @@ export default function TerapeutaDetail() {
           </h1>
           <div className="flex items-center gap-3 mt-1">
             <span className="text-sm text-slate-500 dark:text-slate-400">{formatRut(terapeuta.rut)}</span>
-            <span className="text-sm text-slate-500 dark:text-slate-400">{terapeuta.especialidad}</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">
+              {terapeuta.especialidad_1}
+              {terapeuta.especialidad_2 && ` · ${terapeuta.especialidad_2}`}
+              {terapeuta.especialidad_3 && ` · ${terapeuta.especialidad_3}`}
+            </span>
             <Badge label={terapeuta.activo ? 'Activo' : 'Inactivo'} color={terapeuta.activo ? 'green' : 'slate'} dot />
           </div>
         </div>
@@ -167,22 +178,28 @@ export default function TerapeutaDetail() {
       <Tabs tabs={TABS} active={activeTab} onChange={setActiveTab}>
         <TabPanel id="datos" active={activeTab}>
           <div className="grid grid-cols-2 gap-4 mb-6">
-            <Input label="RUT" value={ef.rut ?? ''} onChange={(e) => setEditForm({ ...ef, rut: e.target.value })} />
+            <Input label="RUT" value={ef.rut ?? ''} onChange={(e) => { setEditForm({ ...ef, rut: e.target.value }); setEditRutError(''); }} error={editRutError} />
             <Input label="Nombres" value={ef.nombres ?? ''} onChange={(e) => setEditForm({ ...ef, nombres: e.target.value })} />
             <Input label="Apellidos" value={ef.apellidos ?? ''} onChange={(e) => setEditForm({ ...ef, apellidos: e.target.value })} />
             <Input label="Fecha de nacimiento" type="date" value={ef.fecha_nacimiento ?? ''} onChange={(e) => setEditForm({ ...ef, fecha_nacimiento: e.target.value })} />
-            <Select label="Género" options={GENERO_OPTIONS} value={ef.genero ?? ''} onChange={(e) => setEditForm({ ...ef, genero: e.target.value })} />
+            <Select label="Identidad sexogenérica" options={GENERO_OPTIONS} value={ef.genero ?? ''} onChange={(e) => setEditForm({ ...ef, genero: e.target.value })} />
+            <Select label="Nacionalidad" options={NACIONALIDAD_OPTIONS} value={ef.nacionalidad ?? ''} onChange={(e) => setEditForm({ ...ef, nacionalidad: e.target.value })} placeholder="Seleccionar…" />
             <Input label="Teléfono" value={ef.telefono ?? ''} onChange={(e) => setEditForm({ ...ef, telefono: e.target.value })} />
             <Input label="Email" type="email" value={ef.email ?? ''} onChange={(e) => setEditForm({ ...ef, email: e.target.value })} />
             <div className="col-span-2">
               <Input label="Dirección" value={ef.direccion ?? ''} onChange={(e) => setEditForm({ ...ef, direccion: e.target.value })} />
             </div>
-            <Input label="Especialidad" value={ef.especialidad ?? ''} onChange={(e) => setEditForm({ ...ef, especialidad: e.target.value })} />
+            <Input label="Especialidad 1" required value={ef.especialidad_1 ?? ''} onChange={(e) => setEditForm({ ...ef, especialidad_1: e.target.value })} />
             <Input label="Registro profesional" value={ef.registro_profesional ?? ''} onChange={(e) => setEditForm({ ...ef, registro_profesional: e.target.value })} />
+            <Input label="Especialidad 2" value={ef.especialidad_2 ?? ''} onChange={(e) => setEditForm({ ...ef, especialidad_2: e.target.value })} />
+            <Input label="Especialidad 3" value={ef.especialidad_3 ?? ''} onChange={(e) => setEditForm({ ...ef, especialidad_3: e.target.value })} />
             <Select label="Estado" options={[{ value: 'true', label: 'Activo' }, { value: 'false', label: 'Inactivo' }]} value={String(ef.activo ?? true)} onChange={(e) => setEditForm({ ...ef, activo: e.target.value === 'true' })} />
           </div>
           <div className="flex justify-end">
-            <Button onClick={() => updateMut.mutate(ef as Partial<TerapeutaForm>)} loading={updateMut.isPending}>
+            <Button onClick={() => {
+              if (ef.rut && !validateRut(ef.rut)) { setEditRutError('RUT inválido'); return; }
+              updateMut.mutate(ef as Partial<TerapeutaForm>);
+            }} loading={updateMut.isPending}>
               Guardar cambios
             </Button>
           </div>

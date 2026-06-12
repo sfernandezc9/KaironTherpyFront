@@ -9,8 +9,11 @@ export interface Terapeuta {
   telefono: string;
   email: string;
   direccion: string;
-  especialidad: string;
+  especialidad_1: string;
+  especialidad_2: string | null;
+  especialidad_3: string | null;
   registro_profesional: string;
+  nacionalidad: string | null;
   activo: boolean;
 }
 
@@ -23,7 +26,10 @@ export interface TerapeutaForm {
   telefono: string;
   email: string;
   direccion: string;
-  especialidad: string;
+  nacionalidad: string;
+  especialidad_1: string;
+  especialidad_2: string;
+  especialidad_3: string;
   registro_profesional: string;
   activo?: boolean;
 }

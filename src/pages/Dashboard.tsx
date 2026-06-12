@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import type { ReactNode } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { getPacientes } from '../api/pacientes';
 import { getTerapeutas } from '../api/terapeutas';
 import { getSesiones } from '../api/sesiones';
@@ -52,6 +53,8 @@ const estadoLabel: Record<EstadoSesion, string> = {
 };
 
 export default function Dashboard() {
+  const { isAdmin } = useAuth();
+
   const { data: pacientes, isLoading: loadingP } = useQuery({
     queryKey: ['pacientes'],
     queryFn: getPacientes,
@@ -60,6 +63,7 @@ export default function Dashboard() {
   const { data: terapeutas, isLoading: loadingT } = useQuery({
     queryKey: ['terapeutas'],
     queryFn: getTerapeutas,
+    enabled: isAdmin,
   });
 
   const now = new Date();
@@ -79,9 +83,10 @@ export default function Dashboard() {
   const { data: stockBajo, isLoading: loadingSB } = useQuery({
     queryKey: ['stock', 'bajo-minimo'],
     queryFn: getStockBajoMinimo,
+    enabled: isAdmin,
   });
 
-  const isLoading = loadingP || loadingT || loadingS || loadingAS || loadingSB;
+  const isLoading = loadingP || (isAdmin && loadingT) || loadingS || loadingAS || (isAdmin && loadingSB);
 
   if (isLoading) return <PageSpinner />;
 
@@ -101,19 +106,21 @@ export default function Dashboard() {
       </div>
 
       {/* KPI cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className={`grid gap-4 mb-8 ${isAdmin ? 'grid-cols-2 lg:grid-cols-4' : 'grid-cols-2'}`}>
         <KpiCard label="Pacientes activos" value={activePacientes} icon={<KpiIconUser />} color="teal" />
         <KpiCard label="Sesiones del mes" value={sesionesMes} icon={<KpiIconCalendar />} color="blue" />
-        <KpiCard label="Terapeutas activos" value={activeTerapeutas} icon={<KpiIconUsers />} color="green" />
-        <KpiCard
-          label="Alertas de stock"
-          value={alertasStock}
-          icon={<KpiIconAlert />}
-          color={alertasStock > 0 ? 'red' : 'slate'}
-        />
+        {isAdmin && <KpiCard label="Terapeutas activos" value={activeTerapeutas} icon={<KpiIconUsers />} color="green" />}
+        {isAdmin && (
+          <KpiCard
+            label="Alertas de stock"
+            value={alertasStock}
+            icon={<KpiIconAlert />}
+            color={alertasStock > 0 ? 'red' : 'slate'}
+          />
+        )}
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className={`grid gap-6 ${isAdmin ? 'lg:grid-cols-3' : ''}`}>
         {/* Recent sessions */}
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
@@ -156,33 +163,35 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Stock alerts */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-slate-800 dark:text-slate-100">Alertas de stock</h2>
-            <Link to="/insumos" className="text-sm text-primary-800 dark:text-primary-300 hover:underline">
-              Ver stock →
-            </Link>
-          </div>
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-800">
-            {(stockBajo?.length ?? 0) === 0 ? (
-              <p className="text-center text-slate-400 dark:text-slate-500 py-10 text-sm">Sin alertas de stock</p>
-            ) : (
-              stockBajo!.map((s) => (
-                <div key={s.id_stock} className="px-4 py-3 flex items-start justify-between gap-2">
-                  <div>
-                    <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{s.nombre_insumo}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">{s.nombre_sucursal}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      {s.cantidad} / {s.cantidad_minima} {s.unidad_medida}
-                    </p>
+        {/* Stock alerts — admin only */}
+        {isAdmin && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-slate-800 dark:text-slate-100">Alertas de stock</h2>
+              <Link to="/insumos" className="text-sm text-primary-800 dark:text-primary-300 hover:underline">
+                Ver stock →
+              </Link>
+            </div>
+            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-800">
+              {(stockBajo?.length ?? 0) === 0 ? (
+                <p className="text-center text-slate-400 dark:text-slate-500 py-10 text-sm">Sin alertas de stock</p>
+              ) : (
+                stockBajo!.map((s) => (
+                  <div key={s.id_stock} className="px-4 py-3 flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{s.nombre_insumo}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">{s.nombre_sucursal}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        {s.cantidad} / {s.cantidad_minima} {s.unidad_medida}
+                      </p>
+                    </div>
+                    <StockBajoBadge />
                   </div>
-                  <StockBajoBadge />
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
