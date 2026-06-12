@@ -97,3 +97,24 @@ export const getStockSucursalSesion = async (id_sucursal: number): Promise<Stock
     stock_bajo: false,
   }));
 };
+
+export const getStockSucursalSolicitud = async (id_sucursal: number): Promise<Stock[]> => {
+  const { data } = await client.get<Array<{
+    id_stock: number;
+    id_insumo: number;
+    nombre: string;
+    unidad_medida: string;
+    cantidad: number;
+    cantidad_minima: number;
+  }>>(`/sesiones/stock-sucursal/${id_sucursal}?para_solicitud=1`);
+  return data.map((s) => ({
+    id_stock: s.id_stock,
+    id_sucursal,
+    id_insumo: s.id_insumo,
+    nombre_insumo: s.nombre,
+    unidad_medida: s.unidad_medida,
+    cantidad: s.cantidad,
+    cantidad_minima: s.cantidad_minima,
+    stock_bajo: s.cantidad <= s.cantidad_minima,
+  }));
+};

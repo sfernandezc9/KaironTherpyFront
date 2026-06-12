@@ -60,3 +60,25 @@ export const getTransferencias = async (filters: TransferenciaFilters = {}): Pro
   const { data } = await client.get<Transferencia[]>('/stock/transferencias', { params: cleaned });
   return data;
 };
+
+// --- Solicitudes ---
+
+import type { Solicitud, SolicitudForm } from '../types/stock';
+
+export const getSolicitudes = async (): Promise<Solicitud[]> => {
+  const { data } = await client.get<Solicitud[]>('/solicitudes');
+  return data;
+};
+
+export const createSolicitud = async (form: SolicitudForm): Promise<{ id_solicitud: number }> => {
+  const { data } = await client.post<{ id_solicitud: number }>('/solicitudes', form);
+  return data;
+};
+
+export const aprobarSolicitud = async (id: number, notas_respuesta?: string): Promise<void> => {
+  await client.put(`/solicitudes/${id}/aprobar`, { notas_respuesta });
+};
+
+export const rechazarSolicitud = async (id: number, notas_respuesta?: string): Promise<void> => {
+  await client.put(`/solicitudes/${id}/rechazar`, { notas_respuesta });
+};

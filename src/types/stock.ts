@@ -63,3 +63,27 @@ export interface TransferenciaFilters {
   desde?: string;
   hasta?: string;
 }
+
+export type EstadoSolicitud = 'pendiente' | 'aprobada' | 'rechazada';
+
+export interface Solicitud {
+  id_solicitud: number;
+  id_sucursal: number;
+  id_stock: number;
+  id_terapeuta: number;
+  cantidad: number;
+  estado: EstadoSolicitud;
+  notas: string | null;
+  notas_respuesta: string | null;
+  created_at: string;
+  nombre_insumo: string;
+  unidad_medida: string;
+  nombre_sucursal: string;
+  nombre_terapeuta: string;
+}
+
+export interface SolicitudForm {
+  id_stock: number;
+  cantidad: number;
+  notas?: string;
+}

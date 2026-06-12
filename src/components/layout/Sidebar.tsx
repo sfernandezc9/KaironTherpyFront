@@ -51,6 +51,13 @@ const IconBuilding = () => (
   </svg>
 );
 
+const IconInbox = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M22 12h-6l-2 3H10l-2-3H2" />
+    <path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z" />
+  </svg>
+);
+
 const IconChart = () => (
   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M3 20h18" />
@@ -88,6 +95,7 @@ interface NavItem {
   label: string;
   icon: React.ReactNode;
   adminOnly?: boolean;
+  terapeutaOnly?: boolean;
 }
 
 const navItems: NavItem[] = [
@@ -95,7 +103,8 @@ const navItems: NavItem[] = [
   { to: '/pacientes', label: 'Pacientes', icon: <IconUser /> },
   { to: '/terapeutas', label: 'Terapeutas', icon: <IconUsers />, adminOnly: true },
   { to: '/sesiones', label: 'Sesiones', icon: <IconCalendar /> },
-  { to: '/insumos', label: 'Insumos & Stock', icon: <IconPackage />, adminOnly: true },
+  { to: '/insumos',     label: 'Insumos & Stock',   icon: <IconPackage />, adminOnly: true },
+  { to: '/solicitudes', label: 'Solicitar insumos', icon: <IconInbox />,   terapeutaOnly: true },
   { to: '/estructura', label: 'Estructura', icon: <IconBuilding />, adminOnly: true },
   { to: '/informes', label: 'Informes', icon: <IconChart />, adminOnly: true },
 ];
@@ -114,7 +123,11 @@ export default function Sidebar({ onClose }: SidebarProps) {
     navigate('/login');
   };
 
-  const visible = navItems.filter((item) => !item.adminOnly || isAdmin);
+  const visible = navItems.filter((item) => {
+    if (item.adminOnly && !isAdmin) return false;
+    if (item.terapeutaOnly && isAdmin) return false;
+    return true;
+  });
 
   return (
     <aside className="h-full bg-slate-100 dark:bg-slate-900 flex flex-col">

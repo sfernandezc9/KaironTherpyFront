@@ -9,6 +9,7 @@ import TerapeutasList from './pages/Terapeutas/TerapeutasList';
 import TerapeutaDetail from './pages/Terapeutas/TerapeutaDetail';
 import SesionesList from './pages/Sesiones/SesionesList';
 import InsumosPage from './pages/Insumos/InsumosPage';
+import SolicitudesPage from './pages/Solicitudes/SolicitudesPage';
 import EstructuraPage from './pages/Estructura/EstructuraPage';
 import InformesPage from './pages/Informes/InformesPage';
 
@@ -63,6 +64,14 @@ export default function App() {
                   element={
                     <PrivateRoute requiredRole="administrador">
                       <InformesPage />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/solicitudes"
+                  element={
+                    <PrivateRoute requiredRole="terapeuta">
+                      <SolicitudesPage />
                     </PrivateRoute>
                   }
                 />
