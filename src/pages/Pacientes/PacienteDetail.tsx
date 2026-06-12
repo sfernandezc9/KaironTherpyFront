@@ -20,7 +20,8 @@ import Badge from '../../components/ui/Badge';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { PageSpinner } from '../../components/ui/Spinner';
 import { useToast } from '../../context/ToastContext';
-import { formatRut, formatDate, formatDateTime, formatDateInput } from '../../utils/format';
+import { formatRut, formatDate, formatDateTime, formatDateInput, validateRut } from '../../utils/format';
+import { NACIONALIDAD_OPTIONS } from '../../utils/nacionalidades';
 import type { PacienteForm } from '../../types/paciente';
 import type { FichaForm, FichaUpdateForm } from '../../types/ficha';
 import type { Sesion } from '../../types/sesion';
@@ -32,9 +33,11 @@ const TABS = [
 ];
 
 const GENERO_OPTIONS = [
-  { value: 'M', label: 'Masculino' },
-  { value: 'F', label: 'Femenino' },
-  { value: 'O', label: 'Otro' },
+  { value: 'Hombre', label: 'Hombre' },
+  { value: 'Mujer', label: 'Mujer' },
+  { value: 'Transfemenino', label: 'Transfemenino' },
+  { value: 'No binario', label: 'No binario' },
+  { value: 'Otro', label: 'Otro' },
 ];
 
 const ESTADO_COLORS: Record<string, 'green' | 'yellow' | 'red'> = {
@@ -80,6 +83,7 @@ export default function PacienteDetail() {
 
   // Datos form
   const [datosForm, setDatosForm] = useState<Partial<PacienteForm> | null>(null);
+  const [datosRutError, setDatosRutError] = useState('');
   const datosMut = useMutation({
     mutationFn: (form: Partial<PacienteForm>) => updatePaciente(pid, form),
     onSuccess: () => {
@@ -136,10 +140,17 @@ export default function PacienteDetail() {
     telefono: paciente.telefono,
     email: paciente.email,
     direccion: paciente.direccion,
+    nacionalidad: paciente.nacionalidad ?? '',
     id_sucursal: paciente.id_sucursal,
     prevision: paciente.prevision,
     contacto_emergencia_nombre: paciente.contacto_emergencia_nombre,
+    contacto_emergencia_parentesco: paciente.contacto_emergencia_parentesco,
     contacto_emergencia_telefono: paciente.contacto_emergencia_telefono,
+    contacto_emergencia_email: paciente.contacto_emergencia_email,
+    contacto2_nombre: paciente.contacto2_nombre ?? '',
+    contacto2_parentesco: paciente.contacto2_parentesco ?? '',
+    contacto2_telefono: paciente.contacto2_telefono ?? '',
+    contacto2_email: paciente.contacto2_email ?? '',
     activo: paciente.activo,
   };
 
@@ -185,11 +196,12 @@ export default function PacienteDetail() {
         {/* Datos personales */}
         <TabPanel id="datos" active={activeTab}>
           <div className="grid grid-cols-2 gap-4 mb-6">
-            <Input label="RUT" value={df.rut ?? ''} onChange={(e) => setDatosForm({ ...df, rut: e.target.value })} />
+            <Input label="RUT" value={df.rut ?? ''} onChange={(e) => { setDatosForm({ ...df, rut: e.target.value }); setDatosRutError(''); }} error={datosRutError} />
             <Input label="Nombres" value={df.nombres ?? ''} onChange={(e) => setDatosForm({ ...df, nombres: e.target.value })} />
             <Input label="Apellidos" value={df.apellidos ?? ''} onChange={(e) => setDatosForm({ ...df, apellidos: e.target.value })} />
             <Input label="Fecha de nacimiento" type="date" value={df.fecha_nacimiento ?? ''} onChange={(e) => setDatosForm({ ...df, fecha_nacimiento: e.target.value })} />
-            <Select label="Género" options={GENERO_OPTIONS} value={df.genero ?? ''} onChange={(e) => setDatosForm({ ...df, genero: e.target.value })} />
+            <Select label="Identidad sexogenérica" options={GENERO_OPTIONS} value={df.genero ?? ''} onChange={(e) => setDatosForm({ ...df, genero: e.target.value })} />
+            <Select label="Nacionalidad" options={NACIONALIDAD_OPTIONS} value={df.nacionalidad ?? ''} onChange={(e) => setDatosForm({ ...df, nacionalidad: e.target.value })} placeholder="Seleccionar…" />
             <Input label="Teléfono" value={df.telefono ?? ''} onChange={(e) => setDatosForm({ ...df, telefono: e.target.value })} />
             <Input label="Email" type="email" value={df.email ?? ''} onChange={(e) => setDatosForm({ ...df, email: e.target.value })} />
             <Select label="Sucursal" options={sucursalOptions} value={df.id_sucursal ?? ''} onChange={(e) => setDatosForm({ ...df, id_sucursal: Number(e.target.value) })} />
@@ -197,12 +209,35 @@ export default function PacienteDetail() {
               <Input label="Dirección" value={df.direccion ?? ''} onChange={(e) => setDatosForm({ ...df, direccion: e.target.value })} />
             </div>
             <Input label="Previsión" value={df.prevision ?? ''} onChange={(e) => setDatosForm({ ...df, prevision: e.target.value })} />
-            <Input label="Contacto emergencia" value={df.contacto_emergencia_nombre ?? ''} onChange={(e) => setDatosForm({ ...df, contacto_emergencia_nombre: e.target.value })} />
-            <Input label="Teléfono emergencia" value={df.contacto_emergencia_telefono ?? ''} onChange={(e) => setDatosForm({ ...df, contacto_emergencia_telefono: e.target.value })} />
             <Select label="Estado" options={[{ value: 'true', label: 'Activo' }, { value: 'false', label: 'Inactivo' }]} value={String(df.activo ?? true)} onChange={(e) => setDatosForm({ ...df, activo: e.target.value === 'true' })} />
+
+            {/* Contacto emergencia 1 */}
+            <div className="col-span-2 border-t border-slate-200 dark:border-slate-700 pt-4">
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Contacto de emergencia 1</p>
+              <div className="grid grid-cols-2 gap-4">
+                <Input label="Nombre" value={df.contacto_emergencia_nombre ?? ''} onChange={(e) => setDatosForm({ ...df, contacto_emergencia_nombre: e.target.value })} />
+                <Input label="Parentesco" value={df.contacto_emergencia_parentesco ?? ''} onChange={(e) => setDatosForm({ ...df, contacto_emergencia_parentesco: e.target.value })} />
+                <Input label="Teléfono" value={df.contacto_emergencia_telefono ?? ''} onChange={(e) => setDatosForm({ ...df, contacto_emergencia_telefono: e.target.value })} />
+                <Input label="Email" type="email" value={df.contacto_emergencia_email ?? ''} onChange={(e) => setDatosForm({ ...df, contacto_emergencia_email: e.target.value })} />
+              </div>
+            </div>
+
+            {/* Contacto emergencia 2 */}
+            <div className="col-span-2 border-t border-slate-200 dark:border-slate-700 pt-4">
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Contacto de emergencia 2 <span className="text-xs font-normal text-slate-400">(opcional)</span></p>
+              <div className="grid grid-cols-2 gap-4">
+                <Input label="Nombre" value={df.contacto2_nombre ?? ''} onChange={(e) => setDatosForm({ ...df, contacto2_nombre: e.target.value })} />
+                <Input label="Parentesco" value={df.contacto2_parentesco ?? ''} onChange={(e) => setDatosForm({ ...df, contacto2_parentesco: e.target.value })} />
+                <Input label="Teléfono" value={df.contacto2_telefono ?? ''} onChange={(e) => setDatosForm({ ...df, contacto2_telefono: e.target.value })} />
+                <Input label="Email" type="email" value={df.contacto2_email ?? ''} onChange={(e) => setDatosForm({ ...df, contacto2_email: e.target.value })} />
+              </div>
+            </div>
           </div>
           <div className="flex justify-end">
-            <Button onClick={() => datosMut.mutate(df as Partial<PacienteForm>)} loading={datosMut.isPending}>
+            <Button onClick={() => {
+              if (df.rut && !validateRut(df.rut)) { setDatosRutError('RUT inválido'); return; }
+              datosMut.mutate(df as Partial<PacienteForm>);
+            }} loading={datosMut.isPending}>
               Guardar cambios
             </Button>
           </div>

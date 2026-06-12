@@ -12,20 +12,26 @@ import Select from '../../components/ui/Select';
 import Badge from '../../components/ui/Badge';
 import { PageSpinner } from '../../components/ui/Spinner';
 import { useToast } from '../../context/ToastContext';
-import { formatRut, formatDate } from '../../utils/format';
+import { formatRut, formatDate, validateRut } from '../../utils/format';
+import { NACIONALIDAD_OPTIONS } from '../../utils/nacionalidades';
 import type { Paciente, PacienteForm } from '../../types/paciente';
 
 const GENERO_OPTIONS = [
-  { value: 'M', label: 'Masculino' },
-  { value: 'F', label: 'Femenino' },
-  { value: 'O', label: 'Otro' },
+  { value: 'Hombre', label: 'Hombre' },
+  { value: 'Mujer', label: 'Mujer' },
+  { value: 'Transfemenino', label: 'Transfemenino' },
+  { value: 'No binario', label: 'No binario' },
+  { value: 'Otro', label: 'Otro' },
 ];
 
 const empty: PacienteForm = {
   rut: '', nombres: '', apellidos: '', fecha_nacimiento: '',
-  genero: '', telefono: '', email: '', direccion: '',
+  genero: '', telefono: '', email: '', direccion: '', nacionalidad: '',
   id_sucursal: 0, prevision: '',
-  contacto_emergencia_nombre: '', contacto_emergencia_telefono: '',
+  contacto_emergencia_nombre: '', contacto_emergencia_parentesco: '',
+  contacto_emergencia_telefono: '', contacto_emergencia_email: '',
+  contacto2_nombre: '', contacto2_parentesco: '',
+  contacto2_telefono: '', contacto2_email: '',
 };
 
 export default function PacientesList() {
@@ -39,6 +45,7 @@ export default function PacientesList() {
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState<PacienteForm>(empty);
   const [errors, setErrors] = useState<Partial<Record<keyof PacienteForm, string>>>({});
+  const [showContact2, setShowContact2] = useState(false);
 
   const { data: pacientes, isLoading } = useQuery({ queryKey: ['pacientes'], queryFn: getPacientes });
   const { data: sucursales } = useQuery({ queryKey: ['sucursales'], queryFn: getSucursales, enabled: isAdmin });
@@ -50,6 +57,7 @@ export default function PacientesList() {
       showToast('Paciente creado exitosamente', 'success');
       setModalOpen(false);
       setForm(empty);
+      setShowContact2(false);
     },
     onError: (e: Error) => showToast(e.message, 'error'),
   });
@@ -57,11 +65,14 @@ export default function PacientesList() {
   const validate = (): boolean => {
     const errs: Partial<Record<keyof PacienteForm, string>> = {};
     if (!form.rut) errs.rut = 'Requerido';
+    else if (!validateRut(form.rut)) errs.rut = 'RUT inválido';
     if (!form.nombres) errs.nombres = 'Requerido';
     if (!form.apellidos) errs.apellidos = 'Requerido';
     if (!form.fecha_nacimiento) errs.fecha_nacimiento = 'Requerido';
     if (!form.genero) errs.genero = 'Requerido';
     if (!form.id_sucursal) errs.id_sucursal = 'Requerido';
+    if (!form.contacto_emergencia_nombre) errs.contacto_emergencia_nombre = 'Requerido';
+    if (!form.contacto_emergencia_telefono) errs.contacto_emergencia_telefono = 'Requerido';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -188,7 +199,8 @@ export default function PacientesList() {
           <Input label="Nombres" required value={form.nombres} onChange={(e) => setForm({ ...form, nombres: e.target.value })} error={errors.nombres} />
           <Input label="Apellidos" required value={form.apellidos} onChange={(e) => setForm({ ...form, apellidos: e.target.value })} error={errors.apellidos} />
           <Input label="Fecha de nacimiento" type="date" required value={form.fecha_nacimiento} onChange={(e) => setForm({ ...form, fecha_nacimiento: e.target.value })} error={errors.fecha_nacimiento} />
-          <Select label="Género" required options={GENERO_OPTIONS} value={form.genero} onChange={(e) => setForm({ ...form, genero: e.target.value })} placeholder="Seleccionar…" error={errors.genero} />
+          <Select label="Identidad sexogenérica" required options={GENERO_OPTIONS} value={form.genero} onChange={(e) => setForm({ ...form, genero: e.target.value })} placeholder="Seleccionar…" error={errors.genero} />
+          <Select label="Nacionalidad" options={NACIONALIDAD_OPTIONS} value={form.nacionalidad} onChange={(e) => setForm({ ...form, nacionalidad: e.target.value })} placeholder="Seleccionar…" />
           <Input label="Teléfono" value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} />
           <Input label="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           <Select
@@ -204,8 +216,49 @@ export default function PacientesList() {
             <Input label="Dirección" value={form.direccion} onChange={(e) => setForm({ ...form, direccion: e.target.value })} />
           </div>
           <Input label="Previsión" value={form.prevision} onChange={(e) => setForm({ ...form, prevision: e.target.value })} />
-          <Input label="Contacto emergencia" value={form.contacto_emergencia_nombre} onChange={(e) => setForm({ ...form, contacto_emergencia_nombre: e.target.value })} />
-          <Input label="Teléfono emergencia" value={form.contacto_emergencia_telefono} onChange={(e) => setForm({ ...form, contacto_emergencia_telefono: e.target.value })} />
+
+          {/* Contacto de emergencia 1 */}
+          <div className="col-span-2 mt-2 border-t border-slate-200 dark:border-slate-700 pt-4">
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Contacto de emergencia 1 <span className="text-red-500">*</span></p>
+            <div className="grid grid-cols-2 gap-4">
+              <Input label="Nombre" required value={form.contacto_emergencia_nombre} onChange={(e) => setForm({ ...form, contacto_emergencia_nombre: e.target.value })} error={errors.contacto_emergencia_nombre} />
+              <Input label="Parentesco" value={form.contacto_emergencia_parentesco} onChange={(e) => setForm({ ...form, contacto_emergencia_parentesco: e.target.value })} />
+              <Input label="Teléfono" required value={form.contacto_emergencia_telefono} onChange={(e) => setForm({ ...form, contacto_emergencia_telefono: e.target.value })} error={errors.contacto_emergencia_telefono} />
+              <Input label="Email" type="email" value={form.contacto_emergencia_email} onChange={(e) => setForm({ ...form, contacto_emergencia_email: e.target.value })} />
+            </div>
+          </div>
+
+          {/* Contacto de emergencia 2 */}
+          <div className="col-span-2">
+            {!showContact2 ? (
+              <button
+                type="button"
+                className="text-sm text-primary-700 dark:text-primary-400 hover:underline"
+                onClick={() => setShowContact2(true)}
+              >
+                + Agregar segundo contacto de emergencia
+              </button>
+            ) : (
+              <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Contacto de emergencia 2</p>
+                  <button
+                    type="button"
+                    className="text-xs text-slate-400 hover:text-red-500"
+                    onClick={() => { setShowContact2(false); setForm({ ...form, contacto2_nombre: '', contacto2_parentesco: '', contacto2_telefono: '', contacto2_email: '' }); }}
+                  >
+                    Eliminar
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Input label="Nombre" value={form.contacto2_nombre} onChange={(e) => setForm({ ...form, contacto2_nombre: e.target.value })} />
+                  <Input label="Parentesco" value={form.contacto2_parentesco} onChange={(e) => setForm({ ...form, contacto2_parentesco: e.target.value })} />
+                  <Input label="Teléfono" value={form.contacto2_telefono} onChange={(e) => setForm({ ...form, contacto2_telefono: e.target.value })} />
+                  <Input label="Email" type="email" value={form.contacto2_email} onChange={(e) => setForm({ ...form, contacto2_email: e.target.value })} />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         <div className="flex justify-end gap-3 mt-6">
           <Button variant="secondary" onClick={() => setModalOpen(false)}>Cancelar</Button>

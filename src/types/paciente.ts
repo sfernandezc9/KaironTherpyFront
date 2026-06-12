@@ -10,9 +10,16 @@ export interface Paciente {
   telefono: string;
   email: string;
   direccion: string;
+  nacionalidad: string | null;
   prevision: string;
   contacto_emergencia_nombre: string;
+  contacto_emergencia_parentesco: string;
   contacto_emergencia_telefono: string;
+  contacto_emergencia_email: string;
+  contacto2_nombre: string | null;
+  contacto2_parentesco: string | null;
+  contacto2_telefono: string | null;
+  contacto2_email: string | null;
   activo: boolean;
   nombre_sucursal?: string;
 }
@@ -26,9 +33,16 @@ export interface PacienteForm {
   telefono: string;
   email: string;
   direccion: string;
+  nacionalidad: string;
   id_sucursal: number;
   prevision: string;
   contacto_emergencia_nombre: string;
+  contacto_emergencia_parentesco: string;
   contacto_emergencia_telefono: string;
+  contacto_emergencia_email: string;
+  contacto2_nombre: string;
+  contacto2_parentesco: string;
+  contacto2_telefono: string;
+  contacto2_email: string;
   activo?: boolean;
 }
