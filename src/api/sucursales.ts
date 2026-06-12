@@ -1,5 +1,5 @@
 import client from './client';
-import type { Sucursal, SucursalForm } from '../types/sucursal';
+import type { Sucursal, SucursalForm, Responsable, ResponsableForm } from '../types/sucursal';
 import type { Terapeuta } from '../types/terapeuta';
 import type { Stock } from '../types/stock';
 
@@ -35,4 +35,24 @@ export const updateSucursal = async (id: number, form: Partial<SucursalForm>): P
 
 export const deleteSucursal = async (id: number): Promise<void> => {
   await client.delete(`/sucursales/${id}`);
+};
+
+// Responsables
+export const getSucursalResponsables = async (id: number): Promise<Responsable[]> => {
+  const { data } = await client.get<Responsable[]>(`/sucursales/${id}/responsables`);
+  return data;
+};
+
+export const createResponsable = async (id_sucursal: number, form: ResponsableForm): Promise<Responsable> => {
+  const { data } = await client.post<Responsable>(`/sucursales/${id_sucursal}/responsables`, form);
+  return data;
+};
+
+export const updateResponsable = async (id_sucursal: number, id_responsable: number, form: ResponsableForm): Promise<Responsable> => {
+  const { data } = await client.put<Responsable>(`/sucursales/${id_sucursal}/responsables/${id_responsable}`, form);
+  return data;
+};
+
+export const deleteResponsable = async (id_sucursal: number, id_responsable: number): Promise<void> => {
+  await client.delete(`/sucursales/${id_sucursal}/responsables/${id_responsable}`);
 };

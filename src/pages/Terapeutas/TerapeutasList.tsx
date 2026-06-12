@@ -10,19 +10,22 @@ import Select from '../../components/ui/Select';
 import Badge from '../../components/ui/Badge';
 import { PageSpinner } from '../../components/ui/Spinner';
 import { useToast } from '../../context/ToastContext';
-import { formatRut } from '../../utils/format';
+import { formatRut, validateRut } from '../../utils/format';
+import { NACIONALIDAD_OPTIONS } from '../../utils/nacionalidades';
 import type { Terapeuta, TerapeutaForm } from '../../types/terapeuta';
 
 const GENERO_OPTIONS = [
-  { value: 'M', label: 'Masculino' },
-  { value: 'F', label: 'Femenino' },
-  { value: 'O', label: 'Otro' },
+  { value: 'Hombre', label: 'Hombre' },
+  { value: 'Mujer', label: 'Mujer' },
+  { value: 'Transfemenino', label: 'Transfemenino' },
+  { value: 'No binario', label: 'No binario' },
+  { value: 'Otro', label: 'Otro' },
 ];
 
 const empty: TerapeutaForm = {
   rut: '', nombres: '', apellidos: '', fecha_nacimiento: '',
-  genero: '', telefono: '', email: '', direccion: '',
-  especialidad: '', registro_profesional: '',
+  genero: '', telefono: '', email: '', direccion: '', nacionalidad: '',
+  especialidad_1: '', especialidad_2: '', especialidad_3: '', registro_profesional: '',
 };
 
 export default function TerapeutasList() {
@@ -53,9 +56,10 @@ export default function TerapeutasList() {
   const validate = () => {
     const errs: Partial<Record<keyof TerapeutaForm, string>> = {};
     if (!form.rut) errs.rut = 'Requerido';
+    else if (!validateRut(form.rut)) errs.rut = 'RUT inválido';
     if (!form.nombres) errs.nombres = 'Requerido';
     if (!form.apellidos) errs.apellidos = 'Requerido';
-    if (!form.especialidad) errs.especialidad = 'Requerido';
+    if (!form.especialidad_1) errs.especialidad_1 = 'Requerido';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -72,7 +76,9 @@ export default function TerapeutasList() {
       t.nombres.toLowerCase().includes(q) ||
       t.apellidos.toLowerCase().includes(q) ||
       t.rut.toLowerCase().includes(q) ||
-      t.especialidad.toLowerCase().includes(q)
+      t.especialidad_1.toLowerCase().includes(q) ||
+      (t.especialidad_2 ?? '').toLowerCase().includes(q) ||
+      (t.especialidad_3 ?? '').toLowerCase().includes(q)
     );
   });
 
@@ -86,8 +92,19 @@ export default function TerapeutasList() {
       accessor: (r) => `${r.apellidos} ${r.nombres}`,
       render: (r) => <span className="font-medium text-slate-900 dark:text-slate-100">{r.apellidos}, {r.nombres}</span>,
     },
-    { key: 'especialidad', header: 'Especialidad', sortable: true, accessor: (r) => r.especialidad },
-    { key: 'registro_profesional', header: 'Registro profesional', accessor: (r) => r.registro_profesional },
+    {
+      key: 'especialidad_1', header: 'Especialidad', sortable: true,
+      accessor: (r) => r.especialidad_1,
+      render: (r) => (
+        <span>
+          {r.especialidad_1}
+          {r.especialidad_2 && <span className="text-slate-400 dark:text-slate-500"> · {r.especialidad_2}</span>}
+          {r.especialidad_3 && <span className="text-slate-400 dark:text-slate-500"> · {r.especialidad_3}</span>}
+        </span>
+      ),
+    },
+    { key: 'telefono', header: 'Celular', accessor: (r) => r.telefono },
+    { key: 'email', header: 'Correo', accessor: (r) => r.email },
     {
       key: 'activo', header: 'Estado',
       render: (r) => <Badge label={r.activo ? 'Activo' : 'Inactivo'} color={r.activo ? 'green' : 'slate'} dot />,
@@ -130,14 +147,17 @@ export default function TerapeutasList() {
           <Input label="Nombres" required value={form.nombres} onChange={(e) => setForm({ ...form, nombres: e.target.value })} error={errors.nombres} />
           <Input label="Apellidos" required value={form.apellidos} onChange={(e) => setForm({ ...form, apellidos: e.target.value })} error={errors.apellidos} />
           <Input label="Fecha de nacimiento" type="date" value={form.fecha_nacimiento} onChange={(e) => setForm({ ...form, fecha_nacimiento: e.target.value })} />
-          <Select label="Género" options={GENERO_OPTIONS} value={form.genero} onChange={(e) => setForm({ ...form, genero: e.target.value })} placeholder="Seleccionar…" />
+          <Select label="Identidad sexogenérica" options={GENERO_OPTIONS} value={form.genero} onChange={(e) => setForm({ ...form, genero: e.target.value })} placeholder="Seleccionar…" />
+          <Select label="Nacionalidad" options={NACIONALIDAD_OPTIONS} value={form.nacionalidad} onChange={(e) => setForm({ ...form, nacionalidad: e.target.value })} placeholder="Seleccionar…" />
           <Input label="Teléfono" value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} />
           <Input label="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           <div className="col-span-2">
             <Input label="Dirección" value={form.direccion} onChange={(e) => setForm({ ...form, direccion: e.target.value })} />
           </div>
-          <Input label="Especialidad" required value={form.especialidad} onChange={(e) => setForm({ ...form, especialidad: e.target.value })} error={errors.especialidad} />
+          <Input label="Especialidad 1" required value={form.especialidad_1} onChange={(e) => setForm({ ...form, especialidad_1: e.target.value })} error={errors.especialidad_1} />
           <Input label="Registro profesional" value={form.registro_profesional} onChange={(e) => setForm({ ...form, registro_profesional: e.target.value })} />
+          <Input label="Especialidad 2" value={form.especialidad_2} onChange={(e) => setForm({ ...form, especialidad_2: e.target.value })} />
+          <Input label="Especialidad 3" value={form.especialidad_3} onChange={(e) => setForm({ ...form, especialidad_3: e.target.value })} />
         </div>
         <div className="flex justify-end gap-3 mt-6">
           <Button variant="secondary" onClick={() => setModalOpen(false)}>Cancelar</Button>
