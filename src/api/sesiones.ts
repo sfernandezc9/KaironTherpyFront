@@ -57,7 +57,7 @@ export const uploadSesionArchivo = async (
 
 export const downloadSesionArchivo = async (id: number, archivo_nombre: string): Promise<void> => {
   const token = localStorage.getItem('token');
-  const res = await fetch(`http://localhost:3000/api/sesiones/${id}/archivo`, {
+  const res = await fetch(`/api/sesiones/${id}/archivo`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) {
