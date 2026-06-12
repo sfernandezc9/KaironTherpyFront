@@ -1,0 +1,36 @@
+name: Deploy Frontend
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - name: Upload dist via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: 201.148.104.166
+          username: kaironth
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftp
+          port: 21
+          local-dir: ./dist/
+          server-dir: kairontherapy/dist/
+
+      - name: Restart Passenger
+        run: |
+          curl --ftp-create-dirs -T /dev/null \
+            "ftp://kaironth:${{ secrets.FTP_PASSWORD }}@201.148.104.166/kairontherapy/tmp/restart.txt"
