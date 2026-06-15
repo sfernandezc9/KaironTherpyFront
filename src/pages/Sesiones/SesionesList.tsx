@@ -214,7 +214,7 @@ export default function SesionesList() {
 
   const fichaOptions = (fichas ?? []).map((f) => ({
     value: f.id_ficha,
-    label: f.nombres ? `${f.nombres} ${f.apellidos} — ${formatRut(f.rut)}` : `Ficha #${f.id_ficha} — Paciente #${f.id_paciente}`,
+    label: f.nombres ? `${f.nombres} ${f.apellidos} — ${formatRut(f.rut ?? '')}` : `Ficha #${f.id_ficha} — Paciente #${f.id_paciente}`,
   }));
 
   const stockOptions = (stockSucursal ?? []).map((s) => ({
