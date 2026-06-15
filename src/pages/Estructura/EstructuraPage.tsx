@@ -439,7 +439,7 @@ export default function EstructuraPage() {
           <Input
             label="RUT" required
             value={empresaForm.rut}
-            onChange={(e) => { setEmpresaForm({ ...empresaForm, rut: e.target.value }); setEmpresaRutError(''); }}
+            onChange={(e) => { setEmpresaForm({ ...empresaForm, rut: formatRut(e.target.value) }); setEmpresaRutError(''); }}
             error={empresaRutError}
           />
           <Input

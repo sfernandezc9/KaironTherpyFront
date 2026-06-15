@@ -178,7 +178,7 @@ export default function TerapeutaDetail() {
       <Tabs tabs={TABS} active={activeTab} onChange={setActiveTab}>
         <TabPanel id="datos" active={activeTab}>
           <div className="grid grid-cols-2 gap-4 mb-6">
-            <Input label="RUT" value={ef.rut ?? ''} onChange={(e) => { setEditForm({ ...ef, rut: e.target.value }); setEditRutError(''); }} error={editRutError} />
+            <Input label="RUT" value={ef.rut ?? ''} onChange={(e) => { setEditForm({ ...ef, rut: formatRut(e.target.value) }); setEditRutError(''); }} error={editRutError} placeholder="12.345.678-9" />
             <Input label="Nombres" value={ef.nombres ?? ''} onChange={(e) => setEditForm({ ...ef, nombres: e.target.value })} />
             <Input label="Apellidos" value={ef.apellidos ?? ''} onChange={(e) => setEditForm({ ...ef, apellidos: e.target.value })} />
             <Input label="Fecha de nacimiento" type="date" value={ef.fecha_nacimiento ?? ''} onChange={(e) => setEditForm({ ...ef, fecha_nacimiento: e.target.value })} />

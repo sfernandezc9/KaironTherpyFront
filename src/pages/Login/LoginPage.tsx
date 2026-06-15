@@ -17,7 +17,7 @@ export default function LoginPage() {
     mutationFn: login,
     onSuccess: ({ token, usuario }) => {
       setAuth(token, usuario);
-      navigate('/', { replace: true });
+      navigate('/dashboard', { replace: true });
     },
     onError: (e: Error) => setError(e.message),
   });

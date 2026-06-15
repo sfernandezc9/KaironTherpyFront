@@ -15,6 +15,7 @@ export interface Terapeuta {
   registro_profesional: string;
   nacionalidad: string | null;
   activo: boolean;
+  ultimo_login: string | null;
 }
 
 export interface TerapeutaForm {

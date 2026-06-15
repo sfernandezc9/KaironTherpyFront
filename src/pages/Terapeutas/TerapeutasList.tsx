@@ -10,7 +10,7 @@ import Select from '../../components/ui/Select';
 import Badge from '../../components/ui/Badge';
 import { PageSpinner } from '../../components/ui/Spinner';
 import { useToast } from '../../context/ToastContext';
-import { formatRut, validateRut } from '../../utils/format';
+import { formatRut, validateRut, formatDateTime } from '../../utils/format';
 import { NACIONALIDAD_OPTIONS } from '../../utils/nacionalidades';
 import type { Terapeuta, TerapeutaForm } from '../../types/terapeuta';
 
@@ -109,6 +109,15 @@ export default function TerapeutasList() {
       key: 'activo', header: 'Estado',
       render: (r) => <Badge label={r.activo ? 'Activo' : 'Inactivo'} color={r.activo ? 'green' : 'slate'} dot />,
     },
+    {
+      key: 'ultimo_login', header: 'Último acceso', sortable: true,
+      accessor: (r) => r.ultimo_login ?? '',
+      render: (r) => (
+        <span className="text-sm text-slate-500 dark:text-slate-400">
+          {r.ultimo_login ? formatDateTime(r.ultimo_login) : <span className="italic text-slate-300 dark:text-slate-600">Nunca</span>}
+        </span>
+      ),
+    },
   ];
 
   if (isLoading) return <PageSpinner />;
@@ -143,7 +152,7 @@ export default function TerapeutasList() {
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Nuevo terapeuta" size="lg">
         <div className="grid grid-cols-2 gap-4">
-          <Input label="RUT" required value={form.rut} onChange={(e) => setForm({ ...form, rut: e.target.value })} error={errors.rut} />
+          <Input label="RUT" required value={form.rut} onChange={(e) => setForm({ ...form, rut: formatRut(e.target.value) })} error={errors.rut} placeholder="12.345.678-9" />
           <Input label="Nombres" required value={form.nombres} onChange={(e) => setForm({ ...form, nombres: e.target.value })} error={errors.nombres} />
           <Input label="Apellidos" required value={form.apellidos} onChange={(e) => setForm({ ...form, apellidos: e.target.value })} error={errors.apellidos} />
           <Input label="Fecha de nacimiento" type="date" value={form.fecha_nacimiento} onChange={(e) => setForm({ ...form, fecha_nacimiento: e.target.value })} />

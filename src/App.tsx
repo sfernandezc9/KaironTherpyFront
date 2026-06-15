@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import PrivateRoute from './components/auth/PrivateRoute';
 import LoginPage from './pages/Login/LoginPage';
+import LandingPage from './pages/Landing/LandingPage';
 import Dashboard from './pages/Dashboard';
 import PacientesList from './pages/Pacientes/PacientesList';
 import PacienteDetail from './pages/Pacientes/PacienteDetail';
@@ -16,6 +17,7 @@ import InformesPage from './pages/Informes/InformesPage';
 export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route
         path="/*"
@@ -23,7 +25,7 @@ export default function App() {
           <PrivateRoute>
             <Layout>
               <Routes>
-                <Route path="/" element={<Dashboard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/pacientes" element={<PacientesList />} />
                 <Route path="/pacientes/:id" element={<PacienteDetail />} />
                 <Route
@@ -67,15 +69,8 @@ export default function App() {
                     </PrivateRoute>
                   }
                 />
-                <Route
-                  path="/solicitudes"
-                  element={
-                    <PrivateRoute requiredRole="terapeuta">
-                      <SolicitudesPage />
-                    </PrivateRoute>
-                  }
-                />
-                <Route path="*" element={<Navigate to="/" replace />} />
+                <Route path="/solicitudes" element={<SolicitudesPage />} />
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
             </Layout>
           </PrivateRoute>

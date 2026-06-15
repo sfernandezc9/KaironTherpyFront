@@ -196,7 +196,7 @@ export default function PacienteDetail() {
         {/* Datos personales */}
         <TabPanel id="datos" active={activeTab}>
           <div className="grid grid-cols-2 gap-4 mb-6">
-            <Input label="RUT" value={df.rut ?? ''} onChange={(e) => { setDatosForm({ ...df, rut: e.target.value }); setDatosRutError(''); }} error={datosRutError} />
+            <Input label="RUT" value={df.rut ?? ''} onChange={(e) => { setDatosForm({ ...df, rut: formatRut(e.target.value) }); setDatosRutError(''); }} error={datosRutError} placeholder="12.345.678-9" />
             <Input label="Nombres" value={df.nombres ?? ''} onChange={(e) => setDatosForm({ ...df, nombres: e.target.value })} />
             <Input label="Apellidos" value={df.apellidos ?? ''} onChange={(e) => setDatosForm({ ...df, apellidos: e.target.value })} />
             <Input label="Fecha de nacimiento" type="date" value={df.fecha_nacimiento ?? ''} onChange={(e) => setDatosForm({ ...df, fecha_nacimiento: e.target.value })} />

@@ -99,12 +99,12 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { to: '/', label: 'Dashboard', icon: <IconGrid /> },
+  { to: '/dashboard', label: 'Dashboard', icon: <IconGrid /> },
   { to: '/pacientes', label: 'Pacientes', icon: <IconUser /> },
   { to: '/terapeutas', label: 'Terapeutas', icon: <IconUsers />, adminOnly: true },
   { to: '/sesiones', label: 'Sesiones', icon: <IconCalendar /> },
   { to: '/insumos',     label: 'Insumos & Stock',   icon: <IconPackage />, adminOnly: true },
-  { to: '/solicitudes', label: 'Solicitar insumos', icon: <IconInbox />,   terapeutaOnly: true },
+  { to: '/solicitudes', label: 'Solicitudes insumos', icon: <IconInbox /> },
   { to: '/estructura', label: 'Estructura', icon: <IconBuilding />, adminOnly: true },
   { to: '/informes', label: 'Informes', icon: <IconChart />, adminOnly: true },
 ];

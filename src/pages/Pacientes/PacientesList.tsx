@@ -195,7 +195,7 @@ export default function PacientesList() {
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Nuevo paciente" size="lg">
         <div className="grid grid-cols-2 gap-4">
-          <Input label="RUT" required value={form.rut} onChange={(e) => setForm({ ...form, rut: e.target.value })} error={errors.rut} placeholder="12345678-9" />
+          <Input label="RUT" required value={form.rut} onChange={(e) => setForm({ ...form, rut: formatRut(e.target.value) })} error={errors.rut} placeholder="12.345.678-9" />
           <Input label="Nombres" required value={form.nombres} onChange={(e) => setForm({ ...form, nombres: e.target.value })} error={errors.nombres} />
           <Input label="Apellidos" required value={form.apellidos} onChange={(e) => setForm({ ...form, apellidos: e.target.value })} error={errors.apellidos} />
           <Input label="Fecha de nacimiento" type="date" required value={form.fecha_nacimiento} onChange={(e) => setForm({ ...form, fecha_nacimiento: e.target.value })} error={errors.fecha_nacimiento} />

@@ -26,7 +26,7 @@ import Badge from '../../components/ui/Badge';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { PageSpinner } from '../../components/ui/Spinner';
 import { useToast } from '../../context/ToastContext';
-import { formatDate, formatDateTime } from '../../utils/format';
+import { formatDate, formatDateTime, formatRut } from '../../utils/format';
 import type { Sesion, SesionForm, SesionFilters, EstadoSesion } from '../../types/sesion';
 
 const ESTADO_OPTIONS = [
@@ -214,7 +214,7 @@ export default function SesionesList() {
 
   const fichaOptions = (fichas ?? []).map((f) => ({
     value: f.id_ficha,
-    label: f.nombres ? `${f.nombres} ${f.apellidos} — ${f.rut}` : `Ficha #${f.id_ficha} — Paciente #${f.id_paciente}`,
+    label: f.nombres ? `${f.nombres} ${f.apellidos} — ${formatRut(f.rut)}` : `Ficha #${f.id_ficha} — Paciente #${f.id_paciente}`,
   }));
 
   const stockOptions = (stockSucursal ?? []).map((s) => ({
