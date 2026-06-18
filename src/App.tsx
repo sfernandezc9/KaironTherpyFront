@@ -11,6 +11,7 @@ import TerapeutaDetail from './pages/Terapeutas/TerapeutaDetail';
 import SesionesList from './pages/Sesiones/SesionesList';
 import InsumosPage from './pages/Insumos/InsumosPage';
 import SolicitudesPage from './pages/Solicitudes/SolicitudesPage';
+import MisSucursalesPage from './pages/MisSucursales/MisSucursalesPage';
 import EstructuraPage from './pages/Estructura/EstructuraPage';
 import InformesPage from './pages/Informes/InformesPage';
 
@@ -70,6 +71,7 @@ export default function App() {
                   }
                 />
                 <Route path="/solicitudes" element={<SolicitudesPage />} />
+                <Route path="/mis-sucursales" element={<MisSucursalesPage />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Routes>
             </Layout>

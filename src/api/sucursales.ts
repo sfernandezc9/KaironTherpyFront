@@ -2,6 +2,7 @@ import client from './client';
 import type { Sucursal, SucursalForm, Responsable, ResponsableForm } from '../types/sucursal';
 import type { Terapeuta } from '../types/terapeuta';
 import type { Stock } from '../types/stock';
+import type { Paciente } from '../types/paciente';
 
 export const getSucursales = async (): Promise<Sucursal[]> => {
   const { data } = await client.get<Sucursal[]>('/sucursales');
@@ -20,6 +21,11 @@ export const getSucursalTerapeutas = async (id: number): Promise<Terapeuta[]> =>
 
 export const getSucursalStock = async (id: number): Promise<Stock[]> => {
   const { data } = await client.get<Stock[]>(`/sucursales/${id}/stock`);
+  return data;
+};
+
+export const getSucursalPacientes = async (id: number): Promise<Pick<Paciente, 'id_paciente' | 'rut' | 'nombres' | 'apellidos' | 'email' | 'telefono'>[]> => {
+  const { data } = await client.get(`/sucursales/${id}/pacientes`);
   return data;
 };
 

@@ -88,6 +88,16 @@ const IconLogout = () => (
   </svg>
 );
 
+const IconBranch = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="6" cy="18" r="2" />
+    <circle cx="18" cy="6" r="2" />
+    <circle cx="6" cy="6" r="2" />
+    <path d="M6 16V8M8 6h8" />
+    <path d="M14 8l4-2" />
+  </svg>
+);
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface NavItem {
@@ -103,6 +113,7 @@ const navItems: NavItem[] = [
   { to: '/pacientes', label: 'Pacientes', icon: <IconUser /> },
   { to: '/terapeutas', label: 'Terapeutas', icon: <IconUsers />, adminOnly: true },
   { to: '/sesiones', label: 'Sesiones', icon: <IconCalendar /> },
+  { to: '/mis-sucursales', label: 'Mis Sucursales', icon: <IconBranch />, terapeutaOnly: true },
   { to: '/insumos',     label: 'Insumos & Stock',   icon: <IconPackage />, adminOnly: true },
   { to: '/solicitudes', label: 'Solicitudes insumos', icon: <IconInbox /> },
   { to: '/estructura', label: 'Estructura', icon: <IconBuilding />, adminOnly: true },
