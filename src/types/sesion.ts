@@ -9,6 +9,9 @@ export interface Sesion {
   duracion_minutos: number;
   estado: EstadoSesion;
   notas_sesion: string;
+  observaciones: string | null;
+  tipo_observacion: 'avance' | 'retroceso' | null;
+  nuevas_indicaciones: string | null;
   id_paciente?: number;
   nombre_paciente?: string;
   nombre_terapeuta?: string;
@@ -26,6 +29,9 @@ export interface SesionForm {
   duracion_minutos: number;
   estado: EstadoSesion;
   notas_sesion: string;
+  observaciones?: string;
+  tipo_observacion?: 'avance' | 'retroceso' | '';
+  nuevas_indicaciones?: string;
 }
 
 export interface SesionInsumo {
