@@ -20,6 +20,24 @@ export interface Usuario {
   sucursales?: SucursalAsignada[];
 }
 
+export interface UsuarioAdmin {
+  id_usuario: number;
+  email: string;
+  rol: Rol;
+  activo: boolean;
+  ultimo_login: string | null;
+  nombres: string;
+  apellidos: string;
+  rut: string;
+}
+
+export interface CreateUsuarioForm {
+  id_persona: number;
+  email: string;
+  password: string;
+  rol: Rol;
+}
+
 export interface LoginForm {
   email: string;
   password: string;

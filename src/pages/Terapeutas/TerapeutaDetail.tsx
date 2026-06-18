@@ -11,6 +11,7 @@ import {
   unassignTerapeutaSucursal,
 } from '../../api/terapeutas';
 import { getSucursales } from '../../api/sucursales';
+import { getUsuarios, createUsuario, deactivateUsuario, adminResetPassword } from '../../api/auth';
 import { Tabs, TabPanel } from '../../components/ui/Tabs';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
@@ -20,7 +21,7 @@ import Modal from '../../components/ui/Modal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { PageSpinner } from '../../components/ui/Spinner';
 import { useToast } from '../../context/ToastContext';
-import { formatRut, formatDate, formatDateInput, validateRut } from '../../utils/format';
+import { formatRut, formatDate, formatDateInput, formatDateTime, validateRut } from '../../utils/format';
 import { NACIONALIDAD_OPTIONS } from '../../utils/nacionalidades';
 import type { TerapeutaForm } from '../../types/terapeuta';
 
@@ -28,6 +29,7 @@ const TABS = [
   { id: 'datos', label: 'Datos' },
   { id: 'sucursales', label: 'Sucursales' },
   { id: 'sesiones', label: 'Sesiones' },
+  { id: 'acceso', label: 'Acceso' },
 ];
 
 const GENERO_OPTIONS = [
@@ -84,6 +86,12 @@ export default function TerapeutaDetail() {
 
   const [editForm, setEditForm] = useState<Partial<TerapeutaForm> | null>(null);
   const [editRutError, setEditRutError] = useState('');
+  const [createAccessOpen, setCreateAccessOpen] = useState(false);
+  const [accessForm, setAccessForm] = useState({ email: '', password: '', confirmPassword: '' });
+  const [accessErrors, setAccessErrors] = useState<Partial<{ email: string; password: string; confirmPassword: string }>>({});
+  const [resetPwdOpen, setResetPwdOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [newPasswordError, setNewPasswordError] = useState('');
 
   const updateMut = useMutation({
     mutationFn: (form: Partial<TerapeutaForm>) => updateTerapeuta(tid, form),
@@ -123,6 +131,47 @@ export default function TerapeutaDetail() {
       qc.invalidateQueries({ queryKey: ['terapeutaSucursales', tid] });
       showToast('Sucursal desasignada', 'success');
       setUnassignTarget(null);
+    },
+    onError: (e: Error) => showToast(e.message, 'error'),
+  });
+
+  const { data: usuarios } = useQuery({
+    queryKey: ['usuarios'],
+    queryFn: getUsuarios,
+    enabled: activeTab === 'acceso',
+  });
+
+  const createAccessMut = useMutation({
+    mutationFn: (id_persona: number) => createUsuario({
+      id_persona,
+      email: accessForm.email,
+      password: accessForm.password,
+      rol: 'terapeuta',
+    }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['usuarios'] });
+      showToast('Acceso creado exitosamente', 'success');
+      setCreateAccessOpen(false);
+      setAccessForm({ email: '', password: '', confirmPassword: '' });
+    },
+    onError: (e: Error) => showToast(e.message, 'error'),
+  });
+
+  const deactivateMut = useMutation({
+    mutationFn: (id_usuario: number) => deactivateUsuario(id_usuario),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['usuarios'] });
+      showToast('Usuario desactivado', 'success');
+    },
+    onError: (e: Error) => showToast(e.message, 'error'),
+  });
+
+  const resetPwdMut = useMutation({
+    mutationFn: (id_usuario: number) => adminResetPassword(id_usuario, newPassword),
+    onSuccess: () => {
+      showToast('Contraseña actualizada', 'success');
+      setResetPwdOpen(false);
+      setNewPassword('');
     },
     onError: (e: Error) => showToast(e.message, 'error'),
   });
@@ -276,7 +325,123 @@ export default function TerapeutaDetail() {
             </div>
           )}
         </TabPanel>
+
+        <TabPanel id="acceso" active={activeTab}>
+          {(() => {
+            const usuario = (usuarios ?? []).find((u) => u.rut === terapeuta.rut);
+            if (!usuario) {
+              return (
+                <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
+                  <p className="text-slate-500 dark:text-slate-400">Este terapeuta no tiene acceso al sistema.</p>
+                  <Button onClick={() => setCreateAccessOpen(true)}>+ Crear acceso</Button>
+                </div>
+              );
+            }
+            return (
+              <div className="space-y-6 max-w-md">
+                <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Estado</span>
+                    <Badge label={usuario.activo ? 'Activo' : 'Inactivo'} color={usuario.activo ? 'green' : 'slate'} dot />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Email</span>
+                    <span className="text-sm text-slate-900 dark:text-slate-100">{usuario.email}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Último acceso</span>
+                    <span className="text-sm text-slate-500 dark:text-slate-400">
+                      {usuario.ultimo_login ? formatDateTime(usuario.ultimo_login) : <span className="italic">Nunca</span>}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <Button variant="secondary" onClick={() => setResetPwdOpen(true)}>Cambiar contraseña</Button>
+                  {usuario.activo && (
+                    <Button variant="danger" onClick={() => deactivateMut.mutate(usuario.id_usuario)} loading={deactivateMut.isPending}>
+                      Desactivar acceso
+                    </Button>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+        </TabPanel>
       </Tabs>
+
+      {/* Create access modal */}
+      <Modal open={createAccessOpen} onClose={() => setCreateAccessOpen(false)} title="Crear acceso al sistema" size="sm">
+        <div className="space-y-4">
+          <Input
+            label="Email de acceso"
+            type="email"
+            required
+            value={accessForm.email}
+            onChange={(e) => setAccessForm({ ...accessForm, email: e.target.value })}
+            error={accessErrors.email}
+            placeholder={terapeuta.email || 'correo@ejemplo.com'}
+          />
+          <Input
+            label="Contraseña"
+            type="password"
+            required
+            value={accessForm.password}
+            onChange={(e) => setAccessForm({ ...accessForm, password: e.target.value })}
+            error={accessErrors.password}
+          />
+          <Input
+            label="Confirmar contraseña"
+            type="password"
+            required
+            value={accessForm.confirmPassword}
+            onChange={(e) => setAccessForm({ ...accessForm, confirmPassword: e.target.value })}
+            error={accessErrors.confirmPassword}
+          />
+        </div>
+        <div className="flex justify-end gap-3 mt-6">
+          <Button variant="secondary" onClick={() => setCreateAccessOpen(false)}>Cancelar</Button>
+          <Button
+            onClick={() => {
+              const errs: Partial<typeof accessErrors> = {};
+              if (!accessForm.email) errs.email = 'Requerido';
+              if (!accessForm.password) errs.password = 'Requerido';
+              else if (accessForm.password.length < 6) errs.password = 'Mínimo 6 caracteres';
+              if (accessForm.password !== accessForm.confirmPassword) errs.confirmPassword = 'Las contraseñas no coinciden';
+              setAccessErrors(errs);
+              if (Object.keys(errs).length > 0) return;
+              createAccessMut.mutate(terapeuta.id_persona);
+            }}
+            loading={createAccessMut.isPending}
+          >
+            Crear acceso
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Reset password modal */}
+      <Modal open={resetPwdOpen} onClose={() => setResetPwdOpen(false)} title="Cambiar contraseña" size="sm">
+        <Input
+          label="Nueva contraseña"
+          type="password"
+          required
+          value={newPassword}
+          onChange={(e) => { setNewPassword(e.target.value); setNewPasswordError(''); }}
+          error={newPasswordError}
+        />
+        <div className="flex justify-end gap-3 mt-6">
+          <Button variant="secondary" onClick={() => setResetPwdOpen(false)}>Cancelar</Button>
+          <Button
+            onClick={() => {
+              if (newPassword.length < 6) { setNewPasswordError('Mínimo 6 caracteres'); return; }
+              const usuario = (usuarios ?? []).find((u) => u.rut === terapeuta.rut);
+              if (usuario) resetPwdMut.mutate(usuario.id_usuario);
+            }}
+            loading={resetPwdMut.isPending}
+          >
+            Guardar
+          </Button>
+        </div>
+      </Modal>
 
       {/* Assign sucursal modal */}
       <Modal open={assignOpen} onClose={() => setAssignOpen(false)} title="Asignar sucursal" size="sm">

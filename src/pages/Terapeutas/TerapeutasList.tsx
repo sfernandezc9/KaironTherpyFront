@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { getTerapeutas, createTerapeuta } from '../../api/terapeutas';
+import { createUsuario } from '../../api/auth';
 import Table, { type Column } from '../../components/ui/Table';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
@@ -28,6 +29,8 @@ const empty: TerapeutaForm = {
   especialidad_1: '', especialidad_2: '', especialidad_3: '', registro_profesional: '',
 };
 
+const emptyCredentials = { email: '', password: '', confirmPassword: '' };
+
 export default function TerapeutasList() {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -36,6 +39,9 @@ export default function TerapeutasList() {
   const [form, setForm] = useState<TerapeutaForm>(empty);
   const [errors, setErrors] = useState<Partial<Record<keyof TerapeutaForm, string>>>({});
   const [search, setSearch] = useState('');
+  const [createAccess, setCreateAccess] = useState(false);
+  const [credentials, setCredentials] = useState(emptyCredentials);
+  const [credErrors, setCredErrors] = useState<Partial<typeof emptyCredentials>>({});
 
   const { data: terapeutas, isLoading } = useQuery({
     queryKey: ['terapeutas'],
@@ -44,11 +50,27 @@ export default function TerapeutasList() {
 
   const mutation = useMutation({
     mutationFn: createTerapeuta,
-    onSuccess: () => {
+    onSuccess: async (terapeuta) => {
+      if (createAccess && credentials.email && credentials.password) {
+        try {
+          await createUsuario({
+            id_persona: terapeuta.id_persona,
+            email: credentials.email,
+            password: credentials.password,
+            rol: 'terapeuta',
+          });
+          showToast('Terapeuta y credenciales creados exitosamente', 'success');
+        } catch (e: unknown) {
+          showToast(`Terapeuta creado, pero error al crear acceso: ${(e as Error).message}`, 'error');
+        }
+      } else {
+        showToast('Terapeuta creado exitosamente', 'success');
+      }
       qc.invalidateQueries({ queryKey: ['terapeutas'] });
-      showToast('Terapeuta creado exitosamente', 'success');
       setModalOpen(false);
       setForm(empty);
+      setCreateAccess(false);
+      setCredentials(emptyCredentials);
     },
     onError: (e: Error) => showToast(e.message, 'error'),
   });
@@ -64,8 +86,19 @@ export default function TerapeutasList() {
     return Object.keys(errs).length === 0;
   };
 
+  const validateCredentials = () => {
+    const errs: Partial<typeof emptyCredentials> = {};
+    if (!credentials.email) errs.email = 'Requerido';
+    if (!credentials.password) errs.password = 'Requerido';
+    else if (credentials.password.length < 6) errs.password = 'Mínimo 6 caracteres';
+    if (credentials.password !== credentials.confirmPassword) errs.confirmPassword = 'Las contraseñas no coinciden';
+    setCredErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
   const handleSubmit = () => {
     if (!validate()) return;
+    if (createAccess && !validateCredentials()) return;
     mutation.mutate(form);
   };
 
@@ -168,8 +201,53 @@ export default function TerapeutasList() {
           <Input label="Especialidad 2" value={form.especialidad_2} onChange={(e) => setForm({ ...form, especialidad_2: e.target.value })} />
           <Input label="Especialidad 3" value={form.especialidad_3} onChange={(e) => setForm({ ...form, especialidad_3: e.target.value })} />
         </div>
+
+        <div className="mt-6 border-t border-slate-200 dark:border-slate-700 pt-5">
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={createAccess}
+              onChange={(e) => { setCreateAccess(e.target.checked); setCredErrors({}); }}
+              className="h-4 w-4 rounded border-slate-300 text-primary-800 focus:ring-primary-500"
+            />
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Crear credenciales de acceso al sistema</span>
+          </label>
+
+          {createAccess && (
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              <div className="col-span-2">
+                <Input
+                  label="Email de acceso"
+                  type="email"
+                  required
+                  value={credentials.email}
+                  onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
+                  error={credErrors.email}
+                  placeholder={form.email || 'correo@ejemplo.com'}
+                />
+              </div>
+              <Input
+                label="Contraseña"
+                type="password"
+                required
+                value={credentials.password}
+                onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                error={credErrors.password}
+              />
+              <Input
+                label="Confirmar contraseña"
+                type="password"
+                required
+                value={credentials.confirmPassword}
+                onChange={(e) => setCredentials({ ...credentials, confirmPassword: e.target.value })}
+                error={credErrors.confirmPassword}
+              />
+            </div>
+          )}
+        </div>
+
         <div className="flex justify-end gap-3 mt-6">
-          <Button variant="secondary" onClick={() => setModalOpen(false)}>Cancelar</Button>
+          <Button variant="secondary" onClick={() => { setModalOpen(false); setCreateAccess(false); setCredentials(emptyCredentials); }}>Cancelar</Button>
           <Button onClick={handleSubmit} loading={mutation.isPending}>Crear terapeuta</Button>
         </div>
       </Modal>
