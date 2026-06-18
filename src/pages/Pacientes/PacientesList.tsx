@@ -28,6 +28,10 @@ const empty: PacienteForm = {
   rut: '', nombres: '', apellidos: '', fecha_nacimiento: '',
   genero: '', telefono: '', email: '', direccion: '', nacionalidad: '',
   id_sucursal: 0, prevision: '',
+  estado_civil: '', numero_hijos: undefined, escolaridad: '', profesion_ocupacion: '',
+  comuna: '', empresa_nombre: '',
+  apoderado_nombre: '', apoderado_parentesco: '', apoderado_edad: undefined,
+  apoderado_direccion: '', apoderado_telefono: '',
   contacto_emergencia_nombre: '', contacto_emergencia_parentesco: '',
   contacto_emergencia_telefono: '', contacto_emergencia_email: '',
   contacto2_nombre: '', contacto2_parentesco: '',
@@ -216,6 +220,32 @@ export default function PacientesList() {
             <Input label="Dirección" value={form.direccion} onChange={(e) => setForm({ ...form, direccion: e.target.value })} />
           </div>
           <Input label="Previsión" value={form.prevision} onChange={(e) => setForm({ ...form, prevision: e.target.value })} />
+
+          {/* Antecedentes personales */}
+          <div className="col-span-2 mt-2 border-t border-slate-200 dark:border-slate-700 pt-4">
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Antecedentes personales</p>
+            <div className="grid grid-cols-2 gap-4">
+              <Input label="Estado civil" value={form.estado_civil ?? ''} onChange={(e) => setForm({ ...form, estado_civil: e.target.value })} />
+              <Input label="N° de hijos" type="number" value={form.numero_hijos ?? ''} onChange={(e) => setForm({ ...form, numero_hijos: e.target.value === '' ? undefined : Number(e.target.value) })} />
+              <Input label="Escolaridad" value={form.escolaridad ?? ''} onChange={(e) => setForm({ ...form, escolaridad: e.target.value })} />
+              <Input label="Profesión y/u ocupación" value={form.profesion_ocupacion ?? ''} onChange={(e) => setForm({ ...form, profesion_ocupacion: e.target.value })} />
+              <Input label="Comuna" value={form.comuna ?? ''} onChange={(e) => setForm({ ...form, comuna: e.target.value })} />
+            </div>
+          </div>
+
+          {/* Apoderado en la empresa */}
+          <div className="col-span-2 border-t border-slate-200 dark:border-slate-700 pt-4">
+            <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Apoderado en la empresa <span className="text-xs font-normal text-slate-400">(opcional)</span></p>
+            <div className="grid grid-cols-2 gap-4">
+              <Input label="Nombre" value={form.apoderado_nombre ?? ''} onChange={(e) => setForm({ ...form, apoderado_nombre: e.target.value })} />
+              <Input label="Parentesco" value={form.apoderado_parentesco ?? ''} onChange={(e) => setForm({ ...form, apoderado_parentesco: e.target.value })} />
+              <Input label="Edad" type="number" value={form.apoderado_edad ?? ''} onChange={(e) => setForm({ ...form, apoderado_edad: e.target.value === '' ? undefined : Number(e.target.value) })} />
+              <Input label="Teléfono" value={form.apoderado_telefono ?? ''} onChange={(e) => setForm({ ...form, apoderado_telefono: e.target.value })} />
+              <div className="col-span-2">
+                <Input label="Dirección" value={form.apoderado_direccion ?? ''} onChange={(e) => setForm({ ...form, apoderado_direccion: e.target.value })} />
+              </div>
+            </div>
+          </div>
 
           {/* Contacto de emergencia 1 */}
           <div className="col-span-2 mt-2 border-t border-slate-200 dark:border-slate-700 pt-4">
