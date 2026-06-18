@@ -52,6 +52,78 @@ const estadoLabel: Record<EstadoSesion, string> = {
   cancelada: 'Cancelada',
 };
 
+// ── Pie chart ─────────────────────────────────────────────────────────────────
+
+const PALETTE = [
+  '#0f5c5c', '#2563eb', '#16a34a', '#9333ea',
+  '#ea580c', '#0891b2', '#d97706', '#be185d',
+];
+
+interface Slice { label: string; value: number; color: string }
+
+function polarToCartesian(cx: number, cy: number, r: number, deg: number) {
+  const rad = ((deg - 90) * Math.PI) / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
+
+function slicePath(cx: number, cy: number, r: number, startDeg: number, endDeg: number) {
+  // Handle full circle edge case
+  if (endDeg - startDeg >= 359.99) {
+    return `M ${cx} ${cy - r} A ${r} ${r} 0 1 1 ${cx - 0.001} ${cy - r} Z`;
+  }
+  const s = polarToCartesian(cx, cy, r, startDeg);
+  const e = polarToCartesian(cx, cy, r, endDeg);
+  const large = endDeg - startDeg > 180 ? 1 : 0;
+  return `M ${cx} ${cy} L ${s.x} ${s.y} A ${r} ${r} 0 ${large} 1 ${e.x} ${e.y} Z`;
+}
+
+function PieChart({ slices, title }: { slices: Slice[]; title: string }) {
+  const total = slices.reduce((s, d) => s + d.value, 0);
+  if (total === 0) {
+    return (
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-5 flex flex-col">
+        <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-4">{title}</p>
+        <p className="text-sm text-slate-400 dark:text-slate-500 text-center py-8">Sin datos</p>
+      </div>
+    );
+  }
+
+  const cx = 80, cy = 80, r = 70;
+  let current = 0;
+
+  return (
+    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-5 flex flex-col">
+      <p className="text-sm font-semibold text-slate-800 dark:text-slate-100 mb-4">{title}</p>
+      <div className="flex items-center gap-6 flex-wrap">
+        <svg viewBox="0 0 160 160" className="w-40 h-40 flex-shrink-0">
+          {slices.map((s) => {
+            const deg = (s.value / total) * 360;
+            const path = slicePath(cx, cy, r, current, current + deg);
+            current += deg;
+            return <path key={s.label} d={path} fill={s.color} stroke="white" strokeWidth="1.5" />;
+          })}
+          {/* center label */}
+          <text x={cx} y={cy - 4} textAnchor="middle" className="fill-slate-700 dark:fill-slate-200" fontSize="18" fontWeight="700">{total}</text>
+          <text x={cx} y={cy + 12} textAnchor="middle" className="fill-slate-400" fontSize="9">total</text>
+        </svg>
+        <ul className="flex flex-col gap-2 min-w-0">
+          {slices.map((s) => (
+            <li key={s.label} className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300">
+              <span className="w-3 h-3 rounded-sm flex-shrink-0" style={{ backgroundColor: s.color }} />
+              <span className="truncate max-w-[140px]">{s.label}</span>
+              <span className="ml-auto font-semibold text-slate-900 dark:text-slate-100 pl-2">
+                {s.value} <span className="font-normal text-slate-400">({Math.round((s.value / total) * 100)}%)</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+// ── Dashboard ────────────────────────────────────────────────────────────────
+
 export default function Dashboard() {
   const { isAdmin } = useAuth();
 
@@ -96,6 +168,28 @@ export default function Dashboard() {
   const alertasStock = stockBajo?.length ?? 0;
   const recentSesiones = [...(allSesiones ?? [])].slice(-10).reverse();
 
+  // ── Chart data ──────────────────────────────────────────────────────────────
+
+  // Chart 1: pacientes por sucursal
+  const porSucursal: Record<string, number> = {};
+  (pacientes ?? []).filter((p) => p.activo).forEach((p) => {
+    const key = p.nombre_sucursal ?? 'Sin sucursal';
+    porSucursal[key] = (porSucursal[key] ?? 0) + 1;
+  });
+  const slicesSucursal: Slice[] = Object.entries(porSucursal).map(([label, value], i) => ({
+    label, value, color: PALETTE[i % PALETTE.length],
+  }));
+
+  // Chart 2: atendidos vs no atendidos
+  const pacientesConSesion = new Set((allSesiones ?? []).map((s) => s.id_paciente).filter(Boolean));
+  const totalActivos = (pacientes ?? []).filter((p) => p.activo);
+  const atendidos = totalActivos.filter((p) => pacientesConSesion.has(p.id_paciente)).length;
+  const noAtendidos = totalActivos.length - atendidos;
+  const slicesAtencion: Slice[] = [
+    { label: 'Atendidos', value: atendidos, color: '#16a34a' },
+    { label: 'Sin sesiones', value: noAtendidos, color: '#94a3b8' },
+  ];
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-8">
@@ -119,6 +213,14 @@ export default function Dashboard() {
           />
         )}
       </div>
+
+      {/* Pie charts — admin only */}
+      {isAdmin && (
+        <div className="grid gap-6 grid-cols-1 lg:grid-cols-2 mb-8">
+          <PieChart title="Pacientes por sucursal" slices={slicesSucursal} />
+          <PieChart title="Pacientes atendidos vs sin sesiones" slices={slicesAtencion} />
+        </div>
+      )}
 
       <div className={`grid gap-6 ${isAdmin ? 'lg:grid-cols-3' : ''}`}>
         {/* Recent sessions */}
@@ -149,11 +251,7 @@ export default function Dashboard() {
                       <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{s.nombre_terapeuta ?? '—'}</td>
                       <td className="px-4 py-3 text-slate-500 dark:text-slate-400">{formatDate(s.fecha)}</td>
                       <td className="px-4 py-3">
-                        <Badge
-                          label={estadoLabel[s.estado]}
-                          color={estadoColor[s.estado]}
-                          dot
-                        />
+                        <Badge label={estadoLabel[s.estado]} color={estadoColor[s.estado]} dot />
                       </td>
                     </tr>
                   ))}
