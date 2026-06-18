@@ -112,6 +112,7 @@ export default function PacienteDetail() {
     mutationFn: (form: FichaForm) => createFicha(form),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['ficha', pid] });
+      qc.invalidateQueries({ queryKey: ['fichas'] });
       showToast('Ficha clínica creada', 'success');
       setFichaForm(null);
     },
