@@ -16,11 +16,12 @@ import {
 import { getSucursales, getSucursalStock } from '../../api/sucursales';
 import { getTerapeutas } from '../../api/terapeutas';
 import { getFichas } from '../../api/fichas';
+import { getPacienteSesiones } from '../../api/pacientes';
 import { useAuth } from '../../context/AuthContext';
 import Table, { type Column } from '../../components/ui/Table';
 import Button from '../../components/ui/Button';
 import Modal from '../../components/ui/Modal';
-import Input from '../../components/ui/Input';
+import Input, { TextArea } from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
 import Badge from '../../components/ui/Badge';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
@@ -54,6 +55,9 @@ export default function SesionesList() {
     duracion_minutos: 60,
     estado: 'pendiente',
     notas_sesion: '',
+    observaciones: '',
+    tipo_observacion: '',
+    nuevas_indicaciones: '',
   };
 
   const [filters, setFilters] = useState<SesionFilters>({});
@@ -61,6 +65,8 @@ export default function SesionesList() {
   const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [createForm, setCreateForm] = useState<SesionForm>(emptySesion);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState<SesionForm>(emptySesion);
 
   const [archivoFile, setArchivoFile] = useState<File | null>(null);
   const [archivoUploading, setArchivoUploading] = useState(false);
@@ -97,6 +103,24 @@ export default function SesionesList() {
     enabled: !!selectedSesion,
   });
 
+  const { data: pacienteSesiones } = useQuery({
+    queryKey: ['pacienteSesiones', selectedSesion?.id_paciente],
+    queryFn: () => getPacienteSesiones(selectedSesion!.id_paciente!),
+    enabled: !!selectedSesion?.id_paciente,
+  });
+
+  const sortedPacienteSesiones = pacienteSesiones
+    ? [...pacienteSesiones].sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime())
+    : [];
+
+  const numeroSesion = selectedSesion && sortedPacienteSesiones.length
+    ? sortedPacienteSesiones.findIndex((s) => s.id_sesion === selectedSesion.id_sesion) + 1
+    : null;
+
+  const prevIndicaciones = selectedSesion && sortedPacienteSesiones.length && numeroSesion && numeroSesion > 1
+    ? (sortedPacienteSesiones[numeroSesion - 2]?.nuevas_indicaciones ?? null)
+    : null;
+
   const { data: stockSucursal } = useQuery({
     queryKey: ['sesionStock', addInsumoSucursal, isTerapeuta],
     queryFn: () =>
@@ -119,8 +143,17 @@ export default function SesionesList() {
 
   const updateMut = useMutation({
     mutationFn: ({ id, form }: { id: number; form: Partial<SesionForm> }) => updateSesion(id, form),
-    onSuccess: () => {
+    onSuccess: (_, { id, form }) => {
       qc.invalidateQueries({ queryKey: ['sesiones'] });
+      qc.invalidateQueries({ queryKey: ['pacienteSesiones'] });
+      if (selectedSesion && selectedSesion.id_sesion === id) {
+        setSelectedSesion({
+          ...selectedSesion,
+          ...form,
+          tipo_observacion: form.tipo_observacion ? form.tipo_observacion : null,
+        });
+      }
+      setEditOpen(false);
       showToast('Sesión actualizada', 'success');
     },
     onError: (e: Error) => showToast(e.message, 'error'),
@@ -370,6 +403,42 @@ export default function SesionesList() {
             value={createForm.notas_sesion}
             onChange={(e) => setCreateForm({ ...createForm, notas_sesion: e.target.value })}
           />
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              Observaciones <span className="font-normal text-slate-400">(Avance / Retroceso)</span>
+            </label>
+            <div className="flex gap-2 mb-2">
+              {(['avance', 'retroceso'] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setCreateForm({ ...createForm, tipo_observacion: createForm.tipo_observacion === t ? '' : t })}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
+                    createForm.tipo_observacion === t
+                      ? t === 'avance'
+                        ? 'bg-green-100 border-green-400 text-green-800 dark:bg-green-900/40 dark:border-green-600 dark:text-green-300'
+                        : 'bg-red-100 border-red-400 text-red-800 dark:bg-red-900/40 dark:border-red-600 dark:text-red-300'
+                      : 'bg-white border-slate-300 text-slate-500 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-400'
+                  }`}
+                >
+                  {t.charAt(0).toUpperCase() + t.slice(1)}
+                </button>
+              ))}
+            </div>
+            <TextArea
+              rows={3}
+              value={createForm.observaciones ?? ''}
+              onChange={(e) => setCreateForm({ ...createForm, observaciones: e.target.value })}
+              placeholder="Observaciones de la sesión…"
+            />
+          </div>
+          <TextArea
+            label="Nuevas indicaciones"
+            rows={3}
+            value={createForm.nuevas_indicaciones ?? ''}
+            onChange={(e) => setCreateForm({ ...createForm, nuevas_indicaciones: e.target.value })}
+            placeholder="Indicaciones para la próxima sesión…"
+          />
         </div>
         <div className="flex justify-end gap-3 mt-6">
           <Button variant="secondary" onClick={() => setCreateOpen(false)}>Cancelar</Button>
@@ -382,7 +451,7 @@ export default function SesionesList() {
         <Modal
           open={!!selectedSesion}
           onClose={() => setSelectedSesion(null)}
-          title={`Sesión — ${formatDate(selectedSesion.fecha)}`}
+          title={numeroSesion ? `Sesión #${numeroSesion} — ${formatDate(selectedSesion.fecha)}` : `Sesión — ${formatDate(selectedSesion.fecha)}`}
           size="lg"
         >
           {isAdmin && diasDiscrepancia(selectedSesion) > 0 && (
@@ -436,6 +505,45 @@ export default function SesionesList() {
             <div className="mb-4">
               <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Notas</p>
               <p className="text-sm text-slate-700 dark:text-slate-300">{selectedSesion.notas_sesion}</p>
+            </div>
+          )}
+
+          {/* Indicaciones sesión anterior */}
+          {prevIndicaciones && (
+            <div className="mb-4 px-3 py-2.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700">
+              <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase mb-1">
+                Indicaciones sesión anterior (#{numeroSesion! - 1})
+              </p>
+              <p className="text-sm text-blue-800 dark:text-blue-200">{prevIndicaciones}</p>
+            </div>
+          )}
+
+          {/* Observaciones */}
+          {(selectedSesion.observaciones || selectedSesion.tipo_observacion) && (
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-1">
+                <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Observaciones</p>
+                {selectedSesion.tipo_observacion && (
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                    selectedSesion.tipo_observacion === 'avance'
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300'
+                      : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300'
+                  }`}>
+                    {selectedSesion.tipo_observacion.charAt(0).toUpperCase() + selectedSesion.tipo_observacion.slice(1)}
+                  </span>
+                )}
+              </div>
+              {selectedSesion.observaciones && (
+                <p className="text-sm text-slate-700 dark:text-slate-300">{selectedSesion.observaciones}</p>
+              )}
+            </div>
+          )}
+
+          {/* Nuevas indicaciones */}
+          {selectedSesion.nuevas_indicaciones && (
+            <div className="mb-4">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Nuevas indicaciones</p>
+              <p className="text-sm text-slate-700 dark:text-slate-300">{selectedSesion.nuevas_indicaciones}</p>
             </div>
           )}
 
@@ -532,8 +640,120 @@ export default function SesionesList() {
                 Eliminar sesión
               </Button>
             )}
-            <Button variant="secondary" onClick={() => setSelectedSesion(null)} className="ml-auto">
-              Cerrar
+            <div className="flex gap-2 ml-auto">
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setEditForm({
+                    id_ficha: selectedSesion.id_ficha,
+                    id_terapeuta: selectedSesion.id_terapeuta,
+                    id_sucursal: selectedSesion.id_sucursal,
+                    fecha: selectedSesion.fecha.slice(0, 16),
+                    duracion_minutos: selectedSesion.duracion_minutos,
+                    estado: selectedSesion.estado,
+                    notas_sesion: selectedSesion.notas_sesion ?? '',
+                    observaciones: selectedSesion.observaciones ?? '',
+                    tipo_observacion: selectedSesion.tipo_observacion ?? '',
+                    nuevas_indicaciones: selectedSesion.nuevas_indicaciones ?? '',
+                  });
+                  setEditOpen(true);
+                }}
+              >
+                Editar
+              </Button>
+              <Button variant="secondary" onClick={() => setSelectedSesion(null)}>
+                Cerrar
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Edit modal */}
+      {selectedSesion && (
+        <Modal open={editOpen} onClose={() => setEditOpen(false)} title="Editar sesión" size="md">
+          <div className="space-y-4">
+            {isAdmin && (
+              <Select
+                label="Terapeuta"
+                options={terapeutaOptions}
+                value={editForm.id_terapeuta || ''}
+                onChange={(e) => setEditForm({ ...editForm, id_terapeuta: Number(e.target.value) })}
+              />
+            )}
+            <Select
+              label="Sucursal"
+              options={sucursalOptions}
+              value={editForm.id_sucursal || ''}
+              onChange={(e) => setEditForm({ ...editForm, id_sucursal: Number(e.target.value) })}
+            />
+            <Input
+              label="Fecha"
+              type="datetime-local"
+              value={editForm.fecha}
+              onChange={(e) => setEditForm({ ...editForm, fecha: e.target.value })}
+            />
+            <Input
+              label="Duración (minutos)"
+              type="number"
+              value={editForm.duracion_minutos}
+              onChange={(e) => setEditForm({ ...editForm, duracion_minutos: Number(e.target.value) })}
+            />
+            <Select
+              label="Estado"
+              options={ESTADO_OPTIONS}
+              value={editForm.estado}
+              onChange={(e) => setEditForm({ ...editForm, estado: e.target.value as EstadoSesion })}
+            />
+            <Input
+              label="Notas"
+              value={editForm.notas_sesion}
+              onChange={(e) => setEditForm({ ...editForm, notas_sesion: e.target.value })}
+            />
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Observaciones <span className="font-normal text-slate-400">(Avance / Retroceso)</span>
+              </label>
+              <div className="flex gap-2 mb-2">
+                {(['avance', 'retroceso'] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => setEditForm({ ...editForm, tipo_observacion: editForm.tipo_observacion === t ? '' : t })}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${
+                      editForm.tipo_observacion === t
+                        ? t === 'avance'
+                          ? 'bg-green-100 border-green-400 text-green-800 dark:bg-green-900/40 dark:border-green-600 dark:text-green-300'
+                          : 'bg-red-100 border-red-400 text-red-800 dark:bg-red-900/40 dark:border-red-600 dark:text-red-300'
+                        : 'bg-white border-slate-300 text-slate-500 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-400'
+                    }`}
+                  >
+                    {t.charAt(0).toUpperCase() + t.slice(1)}
+                  </button>
+                ))}
+              </div>
+              <TextArea
+                rows={3}
+                value={editForm.observaciones ?? ''}
+                onChange={(e) => setEditForm({ ...editForm, observaciones: e.target.value })}
+                placeholder="Observaciones de la sesión…"
+              />
+            </div>
+            <TextArea
+              label="Nuevas indicaciones"
+              rows={3}
+              value={editForm.nuevas_indicaciones ?? ''}
+              onChange={(e) => setEditForm({ ...editForm, nuevas_indicaciones: e.target.value })}
+              placeholder="Indicaciones para la próxima sesión…"
+            />
+          </div>
+          <div className="flex justify-end gap-3 mt-6">
+            <Button variant="secondary" onClick={() => setEditOpen(false)}>Cancelar</Button>
+            <Button
+              onClick={() => updateMut.mutate({ id: selectedSesion.id_sesion, form: editForm })}
+              loading={updateMut.isPending}
+            >
+              Guardar
             </Button>
           </div>
         </Modal>
