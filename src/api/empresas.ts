@@ -1,5 +1,5 @@
 import client from './client';
-import type { Empresa, EmpresaForm } from '../types/empresa';
+import type { Empresa, EmpresaForm, EmpresaResponsable, EmpresaResponsableForm } from '../types/empresa';
 import type { Sucursal } from '../types/sucursal';
 
 export const getEmpresas = async (): Promise<Empresa[]> => {
@@ -29,4 +29,24 @@ export const updateEmpresa = async (id: number, form: EmpresaForm): Promise<Empr
 
 export const deleteEmpresa = async (id: number): Promise<void> => {
   await client.delete(`/empresas/${id}`);
+};
+
+// Responsables
+export const getEmpresaResponsables = async (id: number): Promise<EmpresaResponsable[]> => {
+  const { data } = await client.get<EmpresaResponsable[]>(`/empresas/${id}/responsables`);
+  return data;
+};
+
+export const createEmpresaResponsable = async (id_empresa: number, form: EmpresaResponsableForm): Promise<EmpresaResponsable> => {
+  const { data } = await client.post<EmpresaResponsable>(`/empresas/${id_empresa}/responsables`, form);
+  return data;
+};
+
+export const updateEmpresaResponsable = async (id_empresa: number, id_responsable: number, form: EmpresaResponsableForm): Promise<EmpresaResponsable> => {
+  const { data } = await client.put<EmpresaResponsable>(`/empresas/${id_empresa}/responsables/${id_responsable}`, form);
+  return data;
+};
+
+export const deleteEmpresaResponsable = async (id_empresa: number, id_responsable: number): Promise<void> => {
+  await client.delete(`/empresas/${id_empresa}/responsables/${id_responsable}`);
 };

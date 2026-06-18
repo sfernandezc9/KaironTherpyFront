@@ -14,3 +14,19 @@ export interface EmpresaForm {
   telefono: string;
   email: string;
 }
+
+export interface EmpresaResponsable {
+  id_responsable: number;
+  id_empresa: number;
+  nombre: string;
+  cargo: string;
+  email: string;
+  celular: string;
+}
+
+export interface EmpresaResponsableForm {
+  nombre: string;
+  cargo: string;
+  email: string;
+  celular: string;
+}

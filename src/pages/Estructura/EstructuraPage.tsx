@@ -6,6 +6,10 @@ import {
   updateEmpresa,
   deleteEmpresa,
   getEmpresaSucursales,
+  getEmpresaResponsables,
+  createEmpresaResponsable,
+  updateEmpresaResponsable,
+  deleteEmpresaResponsable,
 } from '../../api/empresas';
 import {
   createSucursal,
@@ -25,12 +29,13 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { PageSpinner } from '../../components/ui/Spinner';
 import { useToast } from '../../context/ToastContext';
 import { formatRut, validateRut } from '../../utils/format';
-import type { Empresa, EmpresaForm } from '../../types/empresa';
+import type { Empresa, EmpresaForm, EmpresaResponsable, EmpresaResponsableForm } from '../../types/empresa';
 import type { Sucursal, SucursalForm, Responsable, ResponsableForm } from '../../types/sucursal';
 
 const emptyEmpresa: EmpresaForm = { nombre: '', rut: '', direccion: '', telefono: '', email: '' };
 const emptySucursal: SucursalForm = { id_empresa: 0, nombre: '', direccion: '', activa: true };
 const emptyResponsable: ResponsableForm = { nombre: '', cargo: '', email: '', celular: '' };
+const emptyEmpresaResponsable: EmpresaResponsableForm = { nombre: '', cargo: '', email: '', celular: '' };
 
 // ── Sub-components ────────────────────────────────────────────
 
@@ -200,6 +205,33 @@ function SucursalCard({
   );
 }
 
+function EmpresaResponsableRow({
+  r,
+  onEdit,
+  onDelete,
+}: {
+  r: EmpresaResponsable;
+  onEdit: (r: EmpresaResponsable) => void;
+  onDelete: (r: EmpresaResponsable) => void;
+}) {
+  return (
+    <div className="flex items-center gap-3 py-2 px-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-700">
+      <div className="flex-1 min-w-0">
+        <span className="font-medium text-slate-800 dark:text-slate-200 text-sm">{r.nombre}</span>
+        {r.cargo && <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">{r.cargo}</span>}
+        <div className="flex gap-4 mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+          {r.email   && <span>{r.email}</span>}
+          {r.celular && <span>{r.celular}</span>}
+        </div>
+      </div>
+      <div className="flex gap-1 shrink-0">
+        <Button variant="ghost" size="sm" onClick={() => onEdit(r)}>Editar</Button>
+        <Button variant="danger" size="sm" onClick={() => onDelete(r)}>Eliminar</Button>
+      </div>
+    </div>
+  );
+}
+
 function EmpresaRow({
   e,
   onEdit,
@@ -214,6 +246,10 @@ function EmpresaRow({
   const [sucursalForm, setSucursalForm] = useState<SucursalForm>(emptySucursal);
   const [sucursalModalOpen, setSucursalModalOpen] = useState(false);
   const [deleteSucursalTarget, setDeleteSucursalTarget] = useState<Sucursal | null>(null);
+  const [editingEmpResp, setEditingEmpResp] = useState<EmpresaResponsable | null>(null);
+  const [empRespForm, setEmpRespForm] = useState<EmpresaResponsableForm>(emptyEmpresaResponsable);
+  const [empRespModalOpen, setEmpRespModalOpen] = useState(false);
+  const [deleteEmpRespTarget, setDeleteEmpRespTarget] = useState<EmpresaResponsable | null>(null);
   const { showToast } = useToast();
   const qc = useQueryClient();
 
@@ -223,6 +259,49 @@ function EmpresaRow({
     enabled: expanded,
   });
 
+  const { data: empResponsables } = useQuery({
+    queryKey: ['empresaResponsables', e.id_empresa],
+    queryFn: () => getEmpresaResponsables(e.id_empresa),
+    enabled: expanded,
+  });
+
+  const empRespMut = useMutation({
+    mutationFn: (form: EmpresaResponsableForm) =>
+      editingEmpResp
+        ? updateEmpresaResponsable(e.id_empresa, editingEmpResp.id_responsable, form)
+        : createEmpresaResponsable(e.id_empresa, form),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['empresaResponsables', e.id_empresa] });
+      showToast(editingEmpResp ? 'Encargado actualizado' : 'Encargado creado', 'success');
+      setEmpRespModalOpen(false);
+      setEditingEmpResp(null);
+      setEmpRespForm(emptyEmpresaResponsable);
+    },
+    onError: (err: Error) => showToast(err.message, 'error'),
+  });
+
+  const deleteEmpRespMut = useMutation({
+    mutationFn: (r: EmpresaResponsable) => deleteEmpresaResponsable(e.id_empresa, r.id_responsable),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['empresaResponsables', e.id_empresa] });
+      showToast('Encargado eliminado', 'success');
+      setDeleteEmpRespTarget(null);
+    },
+    onError: (err: Error) => showToast(err.message, 'error'),
+  });
+
+  const openAddEmpResp = () => {
+    setEditingEmpResp(null);
+    setEmpRespForm(emptyEmpresaResponsable);
+    setEmpRespModalOpen(true);
+  };
+
+  const openEditEmpResp = (r: EmpresaResponsable) => {
+    setEditingEmpResp(r);
+    setEmpRespForm({ nombre: r.nombre, cargo: r.cargo, email: r.email, celular: r.celular });
+    setEmpRespModalOpen(true);
+  };
+
   const sucursalMut = useMutation({
     mutationFn: (form: SucursalForm) =>
       editingSucursal
@@ -230,6 +309,7 @@ function EmpresaRow({
         : createSucursal(form),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['empresaSucursales', e.id_empresa] });
+      qc.invalidateQueries({ queryKey: ['sucursales'] });
       showToast(editingSucursal ? 'Sucursal actualizada' : 'Sucursal creada', 'success');
       setSucursalModalOpen(false);
       setEditingSucursal(null);
@@ -242,6 +322,7 @@ function EmpresaRow({
     mutationFn: (s: Sucursal) => deleteSucursal(s.id_sucursal),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['empresaSucursales', e.id_empresa] });
+      qc.invalidateQueries({ queryKey: ['sucursales'] });
       showToast('Sucursal eliminada', 'success');
       setDeleteSucursalTarget(null);
     },
@@ -279,29 +360,56 @@ function EmpresaRow({
         </div>
       </div>
 
-      {/* Sucursales panel */}
+      {/* Sucursales + Encargados panel */}
       {expanded && (
-        <div className="px-4 py-3 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Sucursales</span>
-            <Button size="sm" onClick={openAddSucursal}>+ Sucursal</Button>
-          </div>
-          {!sucursales ? (
-            <p className="text-xs text-slate-400 py-1">Cargando…</p>
-          ) : sucursales.length === 0 ? (
-            <p className="text-xs text-slate-400 dark:text-slate-500 py-1">Sin sucursales</p>
-          ) : (
-            <div className="space-y-2">
-              {sucursales.map((s) => (
-                <SucursalCard
-                  key={s.id_sucursal}
-                  s={s}
-                  onEdit={openEditSucursal}
-                  onDelete={setDeleteSucursalTarget}
-                />
-              ))}
+        <div className="px-4 py-3 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 space-y-4">
+          {/* Sucursales */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Sucursales</span>
+              <Button size="sm" onClick={openAddSucursal}>+ Sucursal</Button>
             </div>
-          )}
+            {!sucursales ? (
+              <p className="text-xs text-slate-400 py-1">Cargando…</p>
+            ) : sucursales.length === 0 ? (
+              <p className="text-xs text-slate-400 dark:text-slate-500 py-1">Sin sucursales</p>
+            ) : (
+              <div className="space-y-2">
+                {sucursales.map((s) => (
+                  <SucursalCard
+                    key={s.id_sucursal}
+                    s={s}
+                    onEdit={openEditSucursal}
+                    onDelete={setDeleteSucursalTarget}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Encargados empresa */}
+          <div className="border-t border-slate-200 dark:border-slate-700 pt-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Encargados empresa</span>
+              <Button size="sm" variant="secondary" onClick={openAddEmpResp}>+ Encargado</Button>
+            </div>
+            {!empResponsables ? (
+              <p className="text-xs text-slate-400 py-1">Cargando…</p>
+            ) : empResponsables.length === 0 ? (
+              <p className="text-xs text-slate-400 dark:text-slate-500 py-1">Sin encargados registrados</p>
+            ) : (
+              <div className="space-y-2">
+                {empResponsables.map((r) => (
+                  <EmpresaResponsableRow
+                    key={r.id_responsable}
+                    r={r}
+                    onEdit={openEditEmpResp}
+                    onDelete={setDeleteEmpRespTarget}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -340,6 +448,39 @@ function EmpresaRow({
         onConfirm={() => deleteSucursalTarget && deleteSucursalMut.mutate(deleteSucursalTarget)}
         onCancel={() => setDeleteSucursalTarget(null)}
         loading={deleteSucursalMut.isPending}
+      />
+
+      {/* Encargado empresa modal */}
+      <Modal
+        open={empRespModalOpen}
+        onClose={() => setEmpRespModalOpen(false)}
+        title={editingEmpResp ? 'Editar encargado' : 'Nuevo encargado empresa'}
+        size="sm"
+      >
+        <div className="grid grid-cols-2 gap-4">
+          <div className="col-span-2">
+            <Input label="Nombre" required value={empRespForm.nombre} onChange={(ev) => setEmpRespForm({ ...empRespForm, nombre: ev.target.value })} />
+          </div>
+          <Input label="Cargo" value={empRespForm.cargo} onChange={(ev) => setEmpRespForm({ ...empRespForm, cargo: ev.target.value })} />
+          <Input label="Celular" value={empRespForm.celular} onChange={(ev) => setEmpRespForm({ ...empRespForm, celular: ev.target.value })} />
+          <div className="col-span-2">
+            <Input label="Email" type="email" value={empRespForm.email} onChange={(ev) => setEmpRespForm({ ...empRespForm, email: ev.target.value })} />
+          </div>
+        </div>
+        <div className="flex justify-end gap-3 mt-6">
+          <Button variant="secondary" onClick={() => setEmpRespModalOpen(false)}>Cancelar</Button>
+          <Button onClick={() => empRespMut.mutate(empRespForm)} loading={empRespMut.isPending}>
+            {editingEmpResp ? 'Guardar' : 'Crear'}
+          </Button>
+        </div>
+      </Modal>
+
+      <ConfirmDialog
+        open={deleteEmpRespTarget !== null}
+        message={`¿Eliminar encargado "${deleteEmpRespTarget?.nombre}"?`}
+        onConfirm={() => deleteEmpRespTarget && deleteEmpRespMut.mutate(deleteEmpRespTarget)}
+        onCancel={() => setDeleteEmpRespTarget(null)}
+        loading={deleteEmpRespMut.isPending}
       />
     </div>
   );
