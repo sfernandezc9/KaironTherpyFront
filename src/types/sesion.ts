@@ -9,11 +9,13 @@ export interface Sesion {
   duracion_minutos: number;
   estado: EstadoSesion;
   notas_sesion: string;
+  id_paciente?: number;
   nombre_paciente?: string;
   nombre_terapeuta?: string;
   nombre_sucursal?: string;
   archivo_nombre: string | null;
   archivo_path: string | null;
+  created_at: string | null;
 }
 
 export interface SesionForm {

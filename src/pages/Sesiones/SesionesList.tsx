@@ -222,8 +222,30 @@ export default function SesionesList() {
     label: `${s.nombre_insumo} (${s.cantidad} ${s.unidad_medida})`,
   }));
 
+  const diasDiscrepancia = (s: Sesion): number => {
+    if (!s.created_at) return 0;
+    const sesionDate = new Date(s.fecha);
+    const creadoDate = new Date(s.created_at);
+    sesionDate.setHours(0, 0, 0, 0);
+    creadoDate.setHours(0, 0, 0, 0);
+    return Math.max(0, Math.floor((creadoDate.getTime() - sesionDate.getTime()) / 86_400_000));
+  };
+
   const columns: Column<Sesion>[] = [
-    { key: 'fecha', header: 'Fecha', sortable: true, accessor: (r) => r.fecha, render: (r) => formatDate(r.fecha) },
+    {
+      key: 'fecha', header: 'Fecha', sortable: true, accessor: (r) => r.fecha,
+      render: (r) => (
+        <span className="flex items-center gap-1.5">
+          {formatDate(r.fecha)}
+          {isAdmin && diasDiscrepancia(r) > 0 && (
+            <span title={`Registrada ${diasDiscrepancia(r)} día(s) después de la fecha de sesión`}
+              className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-600 dark:text-amber-400 flex-shrink-0">
+              <svg viewBox="0 0 16 16" fill="currentColor" className="w-3 h-3"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 3.5a.75.75 0 01.75.75v3a.75.75 0 01-1.5 0v-3A.75.75 0 018 4.5zm0 6.5a.875.875 0 110-1.75A.875.875 0 018 11z"/></svg>
+            </span>
+          )}
+        </span>
+      ),
+    },
     { key: 'paciente', header: 'Paciente', sortable: true, accessor: (r) => r.nombre_paciente ?? '', render: (r) => r.nombre_paciente ?? '—' },
     { key: 'terapeuta', header: 'Terapeuta', sortable: true, accessor: (r) => r.nombre_terapeuta ?? '', render: (r) => r.nombre_terapeuta ?? '—' },
     { key: 'sucursal', header: 'Sucursal', accessor: (r) => r.nombre_sucursal ?? '', render: (r) => <span className="text-slate-500 dark:text-slate-400">{r.nombre_sucursal ?? '—'}</span> },
@@ -363,6 +385,21 @@ export default function SesionesList() {
           title={`Sesión — ${formatDate(selectedSesion.fecha)}`}
           size="lg"
         >
+          {isAdmin && diasDiscrepancia(selectedSesion) > 0 && (
+            <div className="flex items-start gap-2 mb-4 px-3 py-2.5 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 text-amber-800 dark:text-amber-300">
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 flex-shrink-0 mt-0.5">
+                <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd"/>
+              </svg>
+              <div className="text-xs leading-snug">
+                <p className="font-semibold">Discrepancia de registro</p>
+                <p>
+                  Sesión del <strong>{formatDate(selectedSesion.fecha)}</strong> registrada{' '}
+                  <strong>{diasDiscrepancia(selectedSesion)} día(s) después</strong> ({formatDateTime(selectedSesion.created_at!)})
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div>
               <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Paciente</p>
@@ -419,20 +456,15 @@ export default function SesionesList() {
               </div>
             ) : (
               <label className="flex flex-col items-center gap-1 p-6 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg cursor-pointer hover:border-teal-600 dark:hover:border-teal-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                <span className="text-sm text-slate-500 dark:text-slate-400">Clic para seleccionar un archivo Excel</span>
-                <span className="text-xs text-slate-400 dark:text-slate-500">.xlsx / .xls — máx 10 MB</span>
+                <span className="text-sm text-slate-500 dark:text-slate-400">Clic para seleccionar un archivo</span>
+                <span className="text-xs text-slate-400 dark:text-slate-500">Cualquier tipo — máx 10 MB</span>
                 <input
                   type="file"
-                  accept=".xlsx,.xls"
                   className="hidden"
                   onChange={(e) => {
                     const f = e.target.files?.[0];
                     e.target.value = '';
                     if (!f) return;
-                    if (!f.name.match(/\.(xlsx|xls)$/i)) {
-                      showToast('Solo se permiten archivos Excel (.xlsx, .xls)', 'error');
-                      return;
-                    }
                     if (f.size > 10 * 1024 * 1024) {
                       showToast('El archivo supera el límite de 10 MB', 'error');
                       return;
