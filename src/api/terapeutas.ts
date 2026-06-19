@@ -1,9 +1,14 @@
 import client from './client';
-import type { Terapeuta, TerapeutaForm, TerapeutaSucursal } from '../types/terapeuta';
+import type { Terapeuta, TerapeutaForm, TerapeutaSucursal, InformeTerapeuta } from '../types/terapeuta';
 import type { Sesion } from '../types/sesion';
 
 export const getTerapeutas = async (): Promise<Terapeuta[]> => {
   const { data } = await client.get<Terapeuta[]>('/terapeutas');
+  return data;
+};
+
+export const getTerapeutaInforme = async (id: number): Promise<InformeTerapeuta> => {
+  const { data } = await client.get<InformeTerapeuta>(`/terapeutas/${id}/informe`);
   return data;
 };
 

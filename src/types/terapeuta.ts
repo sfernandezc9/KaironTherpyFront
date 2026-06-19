@@ -42,3 +42,25 @@ export interface TerapeutaSucursal {
   fecha_inicio: string;
   fecha_fin: string | null;
 }
+
+export interface InformeTerapeuta {
+  terapeuta: {
+    id_terapeuta: number;
+    rut: string;
+    nombres: string;
+    apellidos: string;
+    email: string;
+    telefono: string;
+    especialidad_1: string;
+    especialidad_2: string | null;
+    especialidad_3: string | null;
+    registro_profesional: string;
+    activo: boolean | number;
+  };
+  trabajadores_tratados: number;
+  trabajadores_activos: number;
+  trabajadores_alta: number;
+  consumo: {
+    oh: number; thc: number; cc: number; pbc: number; bzo: number; amp: number; otros: number;
+  };
+}

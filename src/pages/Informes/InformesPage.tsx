@@ -1,187 +1,286 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getInformes, createInforme, updateInforme, deleteInforme } from '../../api/informes';
-import { getEmpresas } from '../../api/empresas';
+import { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { getEmpresas, getEmpresaSucursales } from '../../api/empresas';
 import { getSucursales } from '../../api/sucursales';
-import { getPacientes } from '../../api/pacientes';
-import { getTerapeutas } from '../../api/terapeutas';
-import { getInsumos } from '../../api/insumos';
+import { getTerapeutas, getTerapeutaInforme } from '../../api/terapeutas';
 import Table, { type Column } from '../../components/ui/Table';
 import Button from '../../components/ui/Button';
-import Modal from '../../components/ui/Modal';
-import Input, { TextArea } from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
-import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import Badge from '../../components/ui/Badge';
+import { Tabs, TabPanel } from '../../components/ui/Tabs';
 import { PageSpinner } from '../../components/ui/Spinner';
-import { useToast } from '../../context/ToastContext';
-import { formatDate } from '../../utils/format';
-import type { Informe, InformeForm, TipoInforme } from '../../types/informe';
+import { exportToExcel, type ExcelColumn } from '../../utils/excel';
+import type { Sucursal } from '../../types/sucursal';
 
-const TIPO_OPTIONS: { value: TipoInforme; label: string }[] = [
-  { value: 'general', label: 'General' },
-  { value: 'empresa', label: 'Empresa' },
-  { value: 'sucursal', label: 'Sucursal' },
-  { value: 'paciente', label: 'Paciente' },
-  { value: 'terapeuta', label: 'Terapeuta' },
-  { value: 'insumo', label: 'Insumo' },
-];
-
-const emptyForm: InformeForm = {
-  titulo: '', tipo: 'general',
-  fecha_desde: '', fecha_hasta: '',
-  contenido: '', generado_por: '',
-};
+// Row for the "General" report: one row per sucursal, joined to its empresa.
+interface GeneralRow {
+  id_empresa: number;
+  empresa: string;
+  rut_empresa: string;
+  id_sucursal: number | null;
+  sucursal: string;
+  direccion: string;
+  activa: boolean | null;
+}
 
 export default function InformesPage() {
-  const qc = useQueryClient();
-  const { showToast } = useToast();
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingInforme, setEditingInforme] = useState<Informe | null>(null);
-  const [form, setForm] = useState<InformeForm>(emptyForm);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [filterTipo, setFilterTipo] = useState<TipoInforme | ''>('');
+  const [tab, setTab] = useState('general');
+  const [empresaId, setEmpresaId] = useState<number | ''>('');
+  const [terapeutaId, setTerapeutaId] = useState<number | ''>('');
 
-  const { data: informes, isLoading } = useQuery({
-    queryKey: ['informes', filterTipo],
-    queryFn: () => getInformes(filterTipo || undefined),
+  const { data: empresas, isLoading: loadingEmpresas } = useQuery({
+    queryKey: ['empresas'],
+    queryFn: getEmpresas,
+  });
+  const { data: sucursales, isLoading: loadingSucursales } = useQuery({
+    queryKey: ['sucursales'],
+    queryFn: getSucursales,
   });
 
-  const { data: empresas } = useQuery({ queryKey: ['empresas'], queryFn: getEmpresas });
-  const { data: sucursales } = useQuery({ queryKey: ['sucursales'], queryFn: getSucursales });
-  const { data: pacientes } = useQuery({ queryKey: ['pacientes'], queryFn: getPacientes });
-  const { data: terapeutas } = useQuery({ queryKey: ['terapeutas'], queryFn: getTerapeutas });
-  const { data: insumos } = useQuery({ queryKey: ['insumos'], queryFn: getInsumos });
-
-  const mut = useMutation({
-    mutationFn: (f: InformeForm) =>
-      editingInforme ? updateInforme(editingInforme.id_informe, f) : createInforme(f),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['informes'] });
-      showToast(editingInforme ? 'Informe actualizado' : 'Informe creado', 'success');
-      setModalOpen(false);
-      setEditingInforme(null);
-      setForm(emptyForm);
-    },
-    onError: (e: Error) => showToast(e.message, 'error'),
-  });
-
-  const deleteMut = useMutation({
-    mutationFn: (id: number) => deleteInforme(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['informes'] });
-      showToast('Informe eliminado', 'success');
-      setDeleteId(null);
-    },
-    onError: (e: Error) => showToast(e.message, 'error'),
-  });
-
-  const openEdit = (inf: Informe) => {
-    setEditingInforme(inf);
-    setForm({
-      titulo: inf.titulo, tipo: inf.tipo,
-      id_empresa: inf.id_empresa, id_sucursal: inf.id_sucursal,
-      id_paciente: inf.id_paciente, id_terapeuta: inf.id_terapeuta,
-      id_insumo: inf.id_insumo,
-      fecha_desde: inf.fecha_desde, fecha_hasta: inf.fecha_hasta,
-      contenido: inf.contenido, url_documento: inf.url_documento,
-      generado_por: inf.generado_por,
+  // ---- General report: all empresas with their sucursales ----
+  const generalRows = useMemo<GeneralRow[]>(() => {
+    if (!empresas) return [];
+    const byEmpresa = new Map<number, Sucursal[]>();
+    (sucursales ?? []).forEach((s) => {
+      const list = byEmpresa.get(s.id_empresa) ?? [];
+      list.push(s);
+      byEmpresa.set(s.id_empresa, list);
     });
-    setModalOpen(true);
-  };
+    const rows: GeneralRow[] = [];
+    empresas.forEach((e) => {
+      const sucs = byEmpresa.get(e.id_empresa) ?? [];
+      if (sucs.length === 0) {
+        rows.push({
+          id_empresa: e.id_empresa, empresa: e.nombre, rut_empresa: e.rut,
+          id_sucursal: null, sucursal: '—', direccion: '—', activa: null,
+        });
+      } else {
+        sucs.forEach((s) => rows.push({
+          id_empresa: e.id_empresa, empresa: e.nombre, rut_empresa: e.rut,
+          id_sucursal: s.id_sucursal, sucursal: s.nombre, direccion: s.direccion, activa: s.activa,
+        }));
+      }
+    });
+    return rows;
+  }, [empresas, sucursales]);
 
-  const columns: Column<Informe>[] = [
-    { key: 'titulo', header: 'Título', sortable: true, accessor: (r) => r.titulo, render: (r) => <span className="font-medium text-slate-900 dark:text-slate-100">{r.titulo}</span> },
-    { key: 'tipo', header: 'Tipo', sortable: true, accessor: (r) => r.tipo, render: (r) => <span className="capitalize">{r.tipo}</span> },
-    { key: 'desde', header: 'Período desde', sortable: true, accessor: (r) => r.fecha_desde, render: (r) => formatDate(r.fecha_desde) },
-    { key: 'hasta', header: 'Hasta', sortable: true, accessor: (r) => r.fecha_hasta, render: (r) => formatDate(r.fecha_hasta) },
-    { key: 'generado_por', header: 'Generado por', accessor: (r) => r.generado_por },
+  const generalColumns: Column<GeneralRow>[] = [
+    { key: 'empresa', header: 'Empresa', sortable: true, accessor: (r) => r.empresa, render: (r) => <span className="font-medium text-slate-900 dark:text-slate-100">{r.empresa}</span> },
+    { key: 'rut_empresa', header: 'RUT empresa', accessor: (r) => r.rut_empresa },
+    { key: 'sucursal', header: 'Sucursal', sortable: true, accessor: (r) => r.sucursal },
+    { key: 'direccion', header: 'Dirección', accessor: (r) => r.direccion },
     {
-      key: 'acciones', header: '',
-      render: (r) => (
-        <div className="flex gap-2 justify-end" onClick={(e) => e.stopPropagation()}>
-          <Button variant="ghost" size="sm" onClick={() => openEdit(r)}>Editar</Button>
-          <Button variant="danger" size="sm" onClick={() => setDeleteId(r.id_informe)}>Eliminar</Button>
-        </div>
-      ),
+      key: 'activa', header: 'Estado',
+      render: (r) => r.activa === null ? <span className="text-slate-400">—</span>
+        : <Badge color={r.activa ? 'green' : 'red'} label={r.activa ? 'Activa' : 'Inactiva'} />,
     },
   ];
 
-  const empresaOptions = (empresas ?? []).map((e) => ({ value: e.id_empresa, label: e.nombre }));
-  const sucursalOptions = (sucursales ?? []).map((s) => ({ value: s.id_sucursal, label: s.nombre }));
-  const pacienteOptions = (pacientes ?? []).map((p) => ({ value: p.id_paciente, label: `${p.apellidos}, ${p.nombres}` }));
-  const terapeutaOptions = (terapeutas ?? []).map((t) => ({ value: t.id_terapeuta, label: `${t.apellidos}, ${t.nombres}` }));
-  const insumoOptions = (insumos ?? []).map((i) => ({ value: i.id_insumo, label: i.nombre }));
+  const exportGeneral = () => {
+    const cols: ExcelColumn<GeneralRow>[] = [
+      { header: 'Empresa', accessor: (r) => r.empresa },
+      { header: 'RUT empresa', accessor: (r) => r.rut_empresa },
+      { header: 'Sucursal', accessor: (r) => r.sucursal },
+      { header: 'Dirección', accessor: (r) => r.direccion },
+      { header: 'Estado', accessor: (r) => r.activa === null ? '—' : r.activa ? 'Activa' : 'Inactiva' },
+    ];
+    exportToExcel('informe-general', cols, generalRows);
+  };
 
-  if (isLoading) return <PageSpinner />;
+  // ---- Empresa report: all sucursales of one empresa ----
+  const { data: empresaSucursales, isLoading: loadingEmpresaSucursales } = useQuery({
+    queryKey: ['empresaSucursales', empresaId],
+    queryFn: () => getEmpresaSucursales(empresaId as number),
+    enabled: empresaId !== '',
+  });
+
+  const empresaColumns: Column<Sucursal>[] = [
+    { key: 'nombre', header: 'Sucursal', sortable: true, accessor: (r) => r.nombre, render: (r) => <span className="font-medium text-slate-900 dark:text-slate-100">{r.nombre}</span> },
+    { key: 'direccion', header: 'Dirección', accessor: (r) => r.direccion },
+    {
+      key: 'activa', header: 'Estado',
+      render: (r) => <Badge color={r.activa ? 'green' : 'red'} label={r.activa ? 'Activa' : 'Inactiva'} />,
+    },
+  ];
+
+  const empresaName = empresas?.find((e) => e.id_empresa === empresaId)?.nombre ?? 'empresa';
+
+  const exportEmpresa = () => {
+    const cols: ExcelColumn<Sucursal>[] = [
+      { header: 'Sucursal', accessor: (r) => r.nombre },
+      { header: 'Dirección', accessor: (r) => r.direccion },
+      { header: 'Estado', accessor: (r) => r.activa ? 'Activa' : 'Inactiva' },
+    ];
+    exportToExcel(`informe-${empresaName.toLowerCase().replace(/\s+/g, '-')}`, cols, empresaSucursales ?? []);
+  };
+
+  const empresaOptions = (empresas ?? []).map((e) => ({ value: e.id_empresa, label: e.nombre }));
+
+  // ---- Terapeuta report: trabajadores tratados / activos / alta + casos de consumo ----
+  const { data: terapeutas } = useQuery({ queryKey: ['terapeutas'], queryFn: getTerapeutas });
+  const { data: informeTerapeuta, isLoading: loadingInformeTerapeuta } = useQuery({
+    queryKey: ['informeTerapeuta', terapeutaId],
+    queryFn: () => getTerapeutaInforme(terapeutaId as number),
+    enabled: terapeutaId !== '',
+  });
+
+  const terapeutaOptions = (terapeutas ?? []).map((t) => ({
+    value: t.id_terapeuta, label: `${t.apellidos}, ${t.nombres}`,
+  }));
+
+  const SUSTANCIA_LABELS: Record<string, string> = {
+    oh: 'OH (Alcohol)', thc: 'THC', cc: 'CC', pbc: 'PBC', bzo: 'BZO', amp: 'AMP', otros: 'Otros',
+  };
+
+  const exportTerapeuta = () => {
+    if (!informeTerapeuta) return;
+    const t = informeTerapeuta.terapeuta;
+    const rows: { campo: string; valor: string | number }[] = [
+      { campo: 'Terapeuta', valor: `${t.apellidos}, ${t.nombres}` },
+      { campo: 'RUT', valor: t.rut },
+      { campo: 'Registro profesional', valor: t.registro_profesional ?? '—' },
+      { campo: 'Especialidad', valor: [t.especialidad_1, t.especialidad_2, t.especialidad_3].filter(Boolean).join(' / ') },
+      { campo: 'Email', valor: t.email ?? '—' },
+      { campo: 'Teléfono', valor: t.telefono ?? '—' },
+      { campo: 'Trabajadores tratados (activos + alta)', valor: informeTerapeuta.trabajadores_tratados },
+      { campo: 'Trabajadores activos', valor: informeTerapeuta.trabajadores_activos },
+      { campo: 'Trabajadores con alta', valor: informeTerapeuta.trabajadores_alta },
+      ...Object.entries(SUSTANCIA_LABELS).map(([k, label]) => ({
+        campo: `Casos de consumo — ${label}`,
+        valor: informeTerapeuta.consumo[k as keyof typeof informeTerapeuta.consumo],
+      })),
+    ];
+    const cols: ExcelColumn<typeof rows[number]>[] = [
+      { header: 'Campo', accessor: (r) => r.campo },
+      { header: 'Valor', accessor: (r) => r.valor },
+    ];
+    exportToExcel(`informe-terapeuta-${t.apellidos.toLowerCase()}`, cols, rows);
+  };
+
+  if (loadingEmpresas || loadingSucursales) return <PageSpinner />;
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <div className="flex items-start justify-between mb-6">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Informes</h1>
-        <Button onClick={() => { setEditingInforme(null); setForm(emptyForm); setModalOpen(true); }}>+ Nuevo informe</Button>
-      </div>
+      <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-6">Informes</h1>
 
-      <div className="mb-6">
-        <select
-          value={filterTipo}
-          onChange={(e) => setFilterTipo(e.target.value as TipoInforme | '')}
-          className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-        >
-          <option value="">Todos los tipos</option>
-          {TIPO_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-        </select>
-      </div>
+      <Tabs
+        tabs={[
+          { id: 'general', label: 'Informe General' },
+          { id: 'empresa', label: 'Informe Empresa' },
+          { id: 'terapeuta', label: 'Informe Terapeuta' },
+        ]}
+        active={tab}
+        onChange={setTab}
+      >
+        <TabPanel id="general" active={tab}>
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm text-slate-500 dark:text-slate-400">Todas las empresas con sus sucursales</p>
+            <Button onClick={exportGeneral} disabled={generalRows.length === 0}>Exportar a Excel</Button>
+          </div>
+          <Table
+            columns={generalColumns}
+            data={generalRows}
+            keyExtractor={(r) => `${r.id_empresa}-${r.id_sucursal ?? 'none'}`}
+            emptyMessage="Sin empresas registradas"
+          />
+        </TabPanel>
 
-      <Table
-        columns={columns}
-        data={informes ?? []}
-        keyExtractor={(r) => r.id_informe}
-        emptyMessage="Sin informes registrados"
-      />
+        <TabPanel id="empresa" active={tab}>
+          <div className="flex items-end justify-between mb-4 gap-4">
+            <div className="w-72">
+              <Select
+                label="Empresa"
+                options={empresaOptions}
+                value={empresaId}
+                onChange={(e) => setEmpresaId(e.target.value ? Number(e.target.value) : '')}
+                placeholder="Seleccionar empresa…"
+              />
+            </div>
+            <Button onClick={exportEmpresa} disabled={empresaId === '' || (empresaSucursales ?? []).length === 0}>Exportar a Excel</Button>
+          </div>
+          {empresaId === '' ? (
+            <p className="text-sm text-slate-500 dark:text-slate-400 py-8 text-center">Seleccione una empresa para ver sus sucursales</p>
+          ) : loadingEmpresaSucursales ? (
+            <PageSpinner />
+          ) : (
+            <Table
+              columns={empresaColumns}
+              data={empresaSucursales ?? []}
+              keyExtractor={(r) => r.id_sucursal}
+              emptyMessage="Esta empresa no tiene sucursales"
+            />
+          )}
+        </TabPanel>
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editingInforme ? 'Editar informe' : 'Nuevo informe'} size="lg">
-        <div className="space-y-4">
-          <Input label="Título" required value={form.titulo} onChange={(e) => setForm({ ...form, titulo: e.target.value })} />
-          <div className="grid grid-cols-2 gap-4">
-            <Select label="Tipo" required options={TIPO_OPTIONS} value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value as TipoInforme })} />
-            <Input label="Generado por" required value={form.generado_por} onChange={(e) => setForm({ ...form, generado_por: e.target.value })} />
-            <Input label="Fecha desde" type="date" required value={form.fecha_desde} onChange={(e) => setForm({ ...form, fecha_desde: e.target.value })} />
-            <Input label="Fecha hasta" type="date" required value={form.fecha_hasta} onChange={(e) => setForm({ ...form, fecha_hasta: e.target.value })} />
+        <TabPanel id="terapeuta" active={tab}>
+          <div className="flex items-end justify-between mb-4 gap-4">
+            <div className="w-72">
+              <Select
+                label="Terapeuta"
+                options={terapeutaOptions}
+                value={terapeutaId}
+                onChange={(e) => setTerapeutaId(e.target.value ? Number(e.target.value) : '')}
+                placeholder="Seleccionar terapeuta…"
+              />
+            </div>
+            <Button onClick={exportTerapeuta} disabled={!informeTerapeuta}>Exportar a Excel</Button>
           </div>
 
-          {/* Conditional FK fields */}
-          {form.tipo === 'empresa' && (
-            <Select label="Empresa" options={empresaOptions} value={form.id_empresa ?? ''} onChange={(e) => setForm({ ...form, id_empresa: Number(e.target.value) })} placeholder="Seleccionar…" />
-          )}
-          {form.tipo === 'sucursal' && (
-            <Select label="Sucursal" options={sucursalOptions} value={form.id_sucursal ?? ''} onChange={(e) => setForm({ ...form, id_sucursal: Number(e.target.value) })} placeholder="Seleccionar…" />
-          )}
-          {form.tipo === 'paciente' && (
-            <Select label="Paciente" options={pacienteOptions} value={form.id_paciente ?? ''} onChange={(e) => setForm({ ...form, id_paciente: Number(e.target.value) })} placeholder="Seleccionar…" />
-          )}
-          {form.tipo === 'terapeuta' && (
-            <Select label="Terapeuta" options={terapeutaOptions} value={form.id_terapeuta ?? ''} onChange={(e) => setForm({ ...form, id_terapeuta: Number(e.target.value) })} placeholder="Seleccionar…" />
-          )}
-          {form.tipo === 'insumo' && (
-            <Select label="Insumo" options={insumoOptions} value={form.id_insumo ?? ''} onChange={(e) => setForm({ ...form, id_insumo: Number(e.target.value) })} placeholder="Seleccionar…" />
-          )}
+          {terapeutaId === '' ? (
+            <p className="text-sm text-slate-500 dark:text-slate-400 py-8 text-center">Seleccione un terapeuta para ver su informe</p>
+          ) : loadingInformeTerapeuta || !informeTerapeuta ? (
+            <PageSpinner />
+          ) : (
+            <div className="space-y-6">
+              {/* Información del terapeuta */}
+              <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-5">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3">
+                  {informeTerapeuta.terapeuta.apellidos}, {informeTerapeuta.terapeuta.nombres}
+                </h2>
+                <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                  <div><dt className="text-slate-500 dark:text-slate-400">RUT</dt><dd className="text-slate-800 dark:text-slate-200">{informeTerapeuta.terapeuta.rut}</dd></div>
+                  <div><dt className="text-slate-500 dark:text-slate-400">Registro profesional</dt><dd className="text-slate-800 dark:text-slate-200">{informeTerapeuta.terapeuta.registro_profesional ?? '—'}</dd></div>
+                  <div><dt className="text-slate-500 dark:text-slate-400">Especialidad</dt><dd className="text-slate-800 dark:text-slate-200">{[informeTerapeuta.terapeuta.especialidad_1, informeTerapeuta.terapeuta.especialidad_2, informeTerapeuta.terapeuta.especialidad_3].filter(Boolean).join(' / ')}</dd></div>
+                  <div><dt className="text-slate-500 dark:text-slate-400">Email</dt><dd className="text-slate-800 dark:text-slate-200">{informeTerapeuta.terapeuta.email ?? '—'}</dd></div>
+                  <div><dt className="text-slate-500 dark:text-slate-400">Teléfono</dt><dd className="text-slate-800 dark:text-slate-200">{informeTerapeuta.terapeuta.telefono ?? '—'}</dd></div>
+                </dl>
+              </div>
 
-          <TextArea label="Contenido" rows={4} value={form.contenido} onChange={(e) => setForm({ ...form, contenido: e.target.value })} />
-          <Input label="URL documento" value={form.url_documento ?? ''} onChange={(e) => setForm({ ...form, url_documento: e.target.value })} />
-        </div>
-        <div className="flex justify-end gap-3 mt-6">
-          <Button variant="secondary" onClick={() => setModalOpen(false)}>Cancelar</Button>
-          <Button onClick={() => mut.mutate(form)} loading={mut.isPending}>{editingInforme ? 'Guardar' : 'Crear'}</Button>
-        </div>
-      </Modal>
+              {/* Trabajadores */}
+              <div className="grid grid-cols-3 gap-4">
+                <StatCard label="Trabajadores tratados" sublabel="activos + alta" value={informeTerapeuta.trabajadores_tratados} />
+                <StatCard label="Trabajadores activos" value={informeTerapeuta.trabajadores_activos} />
+                <StatCard label="Trabajadores con alta" value={informeTerapeuta.trabajadores_alta} />
+              </div>
 
-      <ConfirmDialog
-        open={deleteId !== null}
-        message="¿Eliminar este informe?"
-        onConfirm={() => deleteId !== null && deleteMut.mutate(deleteId)}
-        onCancel={() => setDeleteId(null)}
-        loading={deleteMut.isPending}
-      />
+              {/* Casos de consumo */}
+              <div>
+                <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Casos de consumo</h3>
+                <div className="grid grid-cols-4 gap-3 md:grid-cols-7">
+                  {Object.entries(SUSTANCIA_LABELS).map(([k, label]) => (
+                    <div key={k} className="rounded-lg border border-slate-200 dark:border-slate-700 p-3 text-center">
+                      <div className="text-2xl font-bold text-primary-800 dark:text-primary-300">
+                        {informeTerapeuta.consumo[k as keyof typeof informeTerapeuta.consumo]}
+                      </div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </TabPanel>
+      </Tabs>
+    </div>
+  );
+}
+
+function StatCard({ label, sublabel, value }: { label: string; sublabel?: string; value: number }) {
+  return (
+    <div className="rounded-xl border border-slate-200 dark:border-slate-700 p-5">
+      <div className="text-3xl font-bold text-slate-900 dark:text-slate-100">{value}</div>
+      <div className="text-sm font-medium text-slate-600 dark:text-slate-300 mt-1">{label}</div>
+      {sublabel && <div className="text-xs text-slate-400 dark:text-slate-500">{sublabel}</div>}
     </div>
   );
 }
