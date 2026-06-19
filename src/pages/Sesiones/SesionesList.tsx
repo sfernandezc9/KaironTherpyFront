@@ -58,7 +58,28 @@ export default function SesionesList() {
     observaciones: '',
     tipo_observacion: '',
     nuevas_indicaciones: '',
+    consumos_adicciones: false,
+    ley_karin: false,
+    psicosocial: false,
+    prevencion_suicidio: false,
+    tipo_intervencion: '',
   };
+
+  const SESSION_FLAGS = [
+    { key: 'consumos_adicciones' as const, label: 'Consumos o Adicciones' },
+    { key: 'ley_karin' as const, label: 'Ley Karin' },
+    { key: 'psicosocial' as const, label: 'Psicosocial' },
+    { key: 'prevencion_suicidio' as const, label: 'Prevención del Suicidio' },
+  ] as const;
+
+  const TIPO_INTERVENCION_OPTIONS = [
+    { value: 'Conversación', label: 'Conversación' },
+    { value: 'Coaching', label: 'Coaching' },
+    { value: 'Terapia personal', label: 'Terapia personal' },
+    { value: 'Terapia grupal', label: 'Terapia grupal' },
+    { value: 'Terapia familiar', label: 'Terapia familiar' },
+    { value: 'Actividad lúdica', label: 'Actividad lúdica' },
+  ];
 
   const [filters, setFilters] = useState<SesionFilters>({});
   const [selectedSesion, setSelectedSesion] = useState<Sesion | null>(null);
@@ -398,6 +419,13 @@ export default function SesionesList() {
             value={createForm.estado}
             onChange={(e) => setCreateForm({ ...createForm, estado: e.target.value as EstadoSesion })}
           />
+          <Select
+            label="Tipo de intervención"
+            options={TIPO_INTERVENCION_OPTIONS}
+            value={createForm.tipo_intervencion ?? ''}
+            onChange={(e) => setCreateForm({ ...createForm, tipo_intervencion: e.target.value })}
+            placeholder="Seleccionar…"
+          />
           <Input
             label="Notas"
             value={createForm.notas_sesion}
@@ -439,6 +467,22 @@ export default function SesionesList() {
             onChange={(e) => setCreateForm({ ...createForm, nuevas_indicaciones: e.target.value })}
             placeholder="Indicaciones para la próxima sesión…"
           />
+          <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-3">Indicadores</p>
+            <div className="grid grid-cols-2 gap-3">
+              {SESSION_FLAGS.map(({ key, label }) => (
+                <div key={key}>
+                  <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">{label}</p>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => setCreateForm({ ...createForm, [key]: true })}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${createForm[key] === true ? 'bg-green-100 border-green-400 text-green-800 dark:bg-green-900/40 dark:border-green-600 dark:text-green-300' : 'bg-white border-slate-300 text-slate-500 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-400'}`}>Sí</button>
+                    <button type="button" onClick={() => setCreateForm({ ...createForm, [key]: false })}
+                      className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${createForm[key] === false ? 'bg-slate-200 border-slate-400 text-slate-700 dark:bg-slate-700 dark:border-slate-500 dark:text-slate-300' : 'bg-white border-slate-300 text-slate-500 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-400'}`}>No</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
         <div className="flex justify-end gap-3 mt-6">
           <Button variant="secondary" onClick={() => setCreateOpen(false)}>Cancelar</Button>
@@ -501,6 +545,13 @@ export default function SesionesList() {
             />
           </div>
 
+          {selectedSesion.tipo_intervencion && (
+            <div className="mb-4">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Tipo de intervención</p>
+              <p className="text-sm text-slate-700 dark:text-slate-300">{selectedSesion.tipo_intervencion}</p>
+            </div>
+          )}
+
           {selectedSesion.notas_sesion && (
             <div className="mb-4">
               <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1">Notas</p>
@@ -546,6 +597,21 @@ export default function SesionesList() {
               <p className="text-sm text-slate-700 dark:text-slate-300">{selectedSesion.nuevas_indicaciones}</p>
             </div>
           )}
+
+          {/* Indicadores */}
+          <div className="mb-4">
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2">Indicadores</p>
+            <div className="grid grid-cols-2 gap-2">
+              {SESSION_FLAGS.map(({ key, label }) => (
+                <div key={key} className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                  <span className="text-xs text-slate-600 dark:text-slate-400">{label}</span>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${selectedSesion[key] ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' : 'bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-400'}`}>
+                    {selectedSesion[key] ? 'Sí' : 'No'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {/* Archivo adjunto */}
           <div className="border-t border-slate-200 dark:border-slate-700 pt-4 mt-4">
@@ -655,6 +721,11 @@ export default function SesionesList() {
                     observaciones: selectedSesion.observaciones ?? '',
                     tipo_observacion: selectedSesion.tipo_observacion ?? '',
                     nuevas_indicaciones: selectedSesion.nuevas_indicaciones ?? '',
+                    consumos_adicciones: selectedSesion.consumos_adicciones ?? false,
+                    ley_karin: selectedSesion.ley_karin ?? false,
+                    psicosocial: selectedSesion.psicosocial ?? false,
+                    prevencion_suicidio: selectedSesion.prevencion_suicidio ?? false,
+                    tipo_intervencion: selectedSesion.tipo_intervencion ?? '',
                   });
                   setEditOpen(true);
                 }}
@@ -705,6 +776,13 @@ export default function SesionesList() {
               value={editForm.estado}
               onChange={(e) => setEditForm({ ...editForm, estado: e.target.value as EstadoSesion })}
             />
+            <Select
+              label="Tipo de intervención"
+              options={TIPO_INTERVENCION_OPTIONS}
+              value={editForm.tipo_intervencion ?? ''}
+              onChange={(e) => setEditForm({ ...editForm, tipo_intervencion: e.target.value })}
+              placeholder="Seleccionar…"
+            />
             <Input
               label="Notas"
               value={editForm.notas_sesion}
@@ -746,6 +824,22 @@ export default function SesionesList() {
               onChange={(e) => setEditForm({ ...editForm, nuevas_indicaciones: e.target.value })}
               placeholder="Indicaciones para la próxima sesión…"
             />
+            <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-3">Indicadores</p>
+              <div className="grid grid-cols-2 gap-3">
+                {SESSION_FLAGS.map(({ key, label }) => (
+                  <div key={key}>
+                    <p className="text-xs font-medium text-slate-600 dark:text-slate-400 mb-1.5">{label}</p>
+                    <div className="flex gap-2">
+                      <button type="button" onClick={() => setEditForm({ ...editForm, [key]: true })}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${editForm[key] === true ? 'bg-green-100 border-green-400 text-green-800 dark:bg-green-900/40 dark:border-green-600 dark:text-green-300' : 'bg-white border-slate-300 text-slate-500 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-400'}`}>Sí</button>
+                      <button type="button" onClick={() => setEditForm({ ...editForm, [key]: false })}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold border transition-colors ${editForm[key] === false ? 'bg-slate-200 border-slate-400 text-slate-700 dark:bg-slate-700 dark:border-slate-500 dark:text-slate-300' : 'bg-white border-slate-300 text-slate-500 dark:bg-slate-800 dark:border-slate-600 dark:text-slate-400'}`}>No</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
           <div className="flex justify-end gap-3 mt-6">
             <Button variant="secondary" onClick={() => setEditOpen(false)}>Cancelar</Button>

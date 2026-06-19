@@ -19,6 +19,11 @@ export interface Sesion {
   archivo_nombre: string | null;
   archivo_path: string | null;
   created_at: string | null;
+  consumos_adicciones: boolean | null;
+  ley_karin: boolean | null;
+  psicosocial: boolean | null;
+  prevencion_suicidio: boolean | null;
+  tipo_intervencion: string | null;
 }
 
 export interface SesionForm {
@@ -32,6 +37,11 @@ export interface SesionForm {
   observaciones?: string;
   tipo_observacion?: 'avance' | 'retroceso' | '';
   nuevas_indicaciones?: string;
+  consumos_adicciones?: boolean;
+  ley_karin?: boolean;
+  psicosocial?: boolean;
+  prevencion_suicidio?: boolean;
+  tipo_intervencion?: string;
 }
 
 export interface SesionInsumo {
