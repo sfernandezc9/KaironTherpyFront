@@ -33,6 +33,7 @@ export interface Paciente {
   contacto2_email: string | null;
   activo: boolean;
   nombre_sucursal?: string;
+  de_alta?: boolean | number;
 }
 
 export interface PacienteForm {

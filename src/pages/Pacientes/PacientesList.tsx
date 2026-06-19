@@ -137,7 +137,10 @@ export default function PacientesList() {
       key: 'activo',
       header: 'Estado',
       render: (r) => (
-        <Badge label={r.activo ? 'Activo' : 'Inactivo'} color={r.activo ? 'green' : 'slate'} dot />
+        <div className="flex items-center gap-1.5">
+          <Badge label={r.activo ? 'Activo' : 'Inactivo'} color={r.activo ? 'green' : 'slate'} dot />
+          {r.de_alta ? <Badge label="Alta" color="blue" dot /> : null}
+        </div>
       ),
     },
   ];

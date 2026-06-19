@@ -40,16 +40,18 @@ const KpiIconAlert = () => (
   </svg>
 );
 
-const estadoColor: Record<EstadoSesion, 'green' | 'yellow' | 'red'> = {
+const estadoColor: Record<EstadoSesion, 'green' | 'yellow' | 'red' | 'blue'> = {
   realizada: 'green',
   pendiente: 'yellow',
   cancelada: 'red',
+  de_alta: 'blue',
 };
 
 const estadoLabel: Record<EstadoSesion, string> = {
   realizada: 'Realizada',
   pendiente: 'Pendiente',
   cancelada: 'Cancelada',
+  de_alta: 'De Alta',
 };
 
 // ── Pie chart ─────────────────────────────────────────────────────────────────

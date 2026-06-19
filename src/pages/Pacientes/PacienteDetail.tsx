@@ -41,10 +41,18 @@ const GENERO_OPTIONS = [
   { value: 'Otro', label: 'Otro' },
 ];
 
-const ESTADO_COLORS: Record<string, 'green' | 'yellow' | 'red'> = {
+const ESTADO_COLORS: Record<string, 'green' | 'yellow' | 'red' | 'blue'> = {
   realizada: 'green',
   pendiente: 'yellow',
   cancelada: 'red',
+  de_alta: 'blue',
+};
+
+const ESTADO_LABELS: Record<string, string> = {
+  realizada: 'Realizada',
+  pendiente: 'Pendiente',
+  cancelada: 'Cancelada',
+  de_alta: 'De Alta',
 };
 
 export default function PacienteDetail() {
@@ -209,6 +217,7 @@ export default function PacienteDetail() {
           <div className="flex items-center gap-3 mt-1">
             <span className="text-sm text-slate-500 dark:text-slate-400">{formatRut(paciente.rut)}</span>
             <Badge label={paciente.activo ? 'Activo' : 'Inactivo'} color={paciente.activo ? 'green' : 'slate'} dot />
+            {paciente.de_alta ? <Badge label="Alta" color="blue" dot /> : null}
           </div>
         </div>
         <Button variant="danger" onClick={() => setDeleteOpen(true)}>Eliminar</Button>
@@ -475,7 +484,7 @@ function SesionRow({
           <span className="text-sm font-medium text-slate-800 dark:text-slate-100">{formatDate(sesion.fecha)}</span>
           <span className="text-xs text-slate-500 dark:text-slate-400">{sesion.duracion_minutos} min</span>
           <Badge
-            label={sesion.estado.charAt(0).toUpperCase() + sesion.estado.slice(1)}
+            label={ESTADO_LABELS[sesion.estado] ?? sesion.estado}
             color={ESTADO_COLORS[sesion.estado]}
             dot
           />

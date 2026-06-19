@@ -40,10 +40,18 @@ const GENERO_OPTIONS = [
   { value: 'Otro', label: 'Otro' },
 ];
 
-const ESTADO_COLORS: Record<string, 'green' | 'yellow' | 'red'> = {
+const ESTADO_COLORS: Record<string, 'green' | 'yellow' | 'red' | 'blue'> = {
   realizada: 'green',
   pendiente: 'yellow',
   cancelada: 'red',
+  de_alta: 'blue',
+};
+
+const ESTADO_LABELS: Record<string, string> = {
+  realizada: 'Realizada',
+  pendiente: 'Pendiente',
+  cancelada: 'Cancelada',
+  de_alta: 'De Alta',
 };
 
 export default function TerapeutaDetail() {
@@ -316,7 +324,7 @@ export default function TerapeutaDetail() {
                       <td className="px-4 py-3">{s.nombre_paciente ?? '—'}</td>
                       <td className="px-4 py-3">{s.duracion_minutos} min</td>
                       <td className="px-4 py-3">
-                        <Badge label={s.estado} color={ESTADO_COLORS[s.estado]} dot />
+                        <Badge label={ESTADO_LABELS[s.estado] ?? s.estado} color={ESTADO_COLORS[s.estado]} dot />
                       </td>
                     </tr>
                   ))}

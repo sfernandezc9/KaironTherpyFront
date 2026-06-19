@@ -1,4 +1,4 @@
-export type EstadoSesion = 'realizada' | 'pendiente' | 'cancelada';
+export type EstadoSesion = 'realizada' | 'pendiente' | 'cancelada' | 'de_alta';
 
 export interface Sesion {
   id_sesion: number;

@@ -34,12 +34,21 @@ const ESTADO_OPTIONS = [
   { value: 'realizada', label: 'Realizada' },
   { value: 'pendiente', label: 'Pendiente' },
   { value: 'cancelada', label: 'Cancelada' },
+  { value: 'de_alta', label: 'De Alta' },
 ];
 
-const ESTADO_COLORS: Record<EstadoSesion, 'green' | 'yellow' | 'red'> = {
+const ESTADO_COLORS: Record<EstadoSesion, 'green' | 'yellow' | 'red' | 'blue'> = {
   realizada: 'green',
   pendiente: 'yellow',
   cancelada: 'red',
+  de_alta: 'blue',
+};
+
+const ESTADO_LABELS: Record<EstadoSesion, string> = {
+  realizada: 'Realizada',
+  pendiente: 'Pendiente',
+  cancelada: 'Cancelada',
+  de_alta: 'De Alta',
 };
 
 export default function SesionesList() {
@@ -307,7 +316,7 @@ export default function SesionesList() {
     {
       key: 'estado',
       header: 'Estado',
-      render: (r) => <Badge label={r.estado.charAt(0).toUpperCase() + r.estado.slice(1)} color={ESTADO_COLORS[r.estado]} dot />,
+      render: (r) => <Badge label={ESTADO_LABELS[r.estado]} color={ESTADO_COLORS[r.estado]} dot />,
     },
   ];
 
