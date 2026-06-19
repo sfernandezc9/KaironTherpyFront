@@ -249,8 +249,8 @@ export default function PacienteDetail() {
             <div className="col-span-2 border-t border-slate-200 dark:border-slate-700 pt-4">
               <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Apoderado en la empresa <span className="text-xs font-normal text-slate-400">(opcional)</span></p>
               <div className="grid grid-cols-2 gap-4">
-                <Input label="Nombre" value={df.apoderado_nombre ?? ''} onChange={(e) => setDatosForm({ ...df, apoderado_nombre: e.target.value })} />
-                <Input label="Parentesco" value={df.apoderado_parentesco ?? ''} onChange={(e) => setDatosForm({ ...df, apoderado_parentesco: e.target.value })} />
+                <Input label="Nombre y apellido" value={df.apoderado_nombre ?? ''} onChange={(e) => setDatosForm({ ...df, apoderado_nombre: e.target.value })} />
+                <Input label="Cargo" value={df.apoderado_parentesco ?? ''} onChange={(e) => setDatosForm({ ...df, apoderado_parentesco: e.target.value })} />
                 <Input label="Edad" type="number" value={df.apoderado_edad ?? ''} onChange={(e) => setDatosForm({ ...df, apoderado_edad: e.target.value === '' ? undefined : Number(e.target.value) })} />
                 <Input label="Teléfono" value={df.apoderado_telefono ?? ''} onChange={(e) => setDatosForm({ ...df, apoderado_telefono: e.target.value })} />
                 <div className="col-span-2">
@@ -263,7 +263,7 @@ export default function PacienteDetail() {
             <div className="col-span-2 border-t border-slate-200 dark:border-slate-700 pt-4">
               <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Contacto de emergencia 1</p>
               <div className="grid grid-cols-2 gap-4">
-                <Input label="Nombre" value={df.contacto_emergencia_nombre ?? ''} onChange={(e) => setDatosForm({ ...df, contacto_emergencia_nombre: e.target.value })} />
+                <Input label="Nombre y apellido" value={df.contacto_emergencia_nombre ?? ''} onChange={(e) => setDatosForm({ ...df, contacto_emergencia_nombre: e.target.value })} />
                 <Input label="Parentesco" value={df.contacto_emergencia_parentesco ?? ''} onChange={(e) => setDatosForm({ ...df, contacto_emergencia_parentesco: e.target.value })} />
                 <Input label="Teléfono" value={df.contacto_emergencia_telefono ?? ''} onChange={(e) => setDatosForm({ ...df, contacto_emergencia_telefono: e.target.value })} />
                 <Input label="Email" type="email" value={df.contacto_emergencia_email ?? ''} onChange={(e) => setDatosForm({ ...df, contacto_emergencia_email: e.target.value })} />
@@ -274,7 +274,7 @@ export default function PacienteDetail() {
             <div className="col-span-2 border-t border-slate-200 dark:border-slate-700 pt-4">
               <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Contacto de emergencia 2 <span className="text-xs font-normal text-slate-400">(opcional)</span></p>
               <div className="grid grid-cols-2 gap-4">
-                <Input label="Nombre" value={df.contacto2_nombre ?? ''} onChange={(e) => setDatosForm({ ...df, contacto2_nombre: e.target.value })} />
+                <Input label="Nombre y apellido" value={df.contacto2_nombre ?? ''} onChange={(e) => setDatosForm({ ...df, contacto2_nombre: e.target.value })} />
                 <Input label="Parentesco" value={df.contacto2_parentesco ?? ''} onChange={(e) => setDatosForm({ ...df, contacto2_parentesco: e.target.value })} />
                 <Input label="Teléfono" value={df.contacto2_telefono ?? ''} onChange={(e) => setDatosForm({ ...df, contacto2_telefono: e.target.value })} />
                 <Input label="Email" type="email" value={df.contacto2_email ?? ''} onChange={(e) => setDatosForm({ ...df, contacto2_email: e.target.value })} />
@@ -594,7 +594,7 @@ function FichaClinicaExtra({
               <tr>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Sustancia</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Edad inicio</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Consumo actual</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase">Cantidad de consumo actual</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -631,7 +631,7 @@ function FichaClinicaExtra({
       {/* Antecedentes de tratamiento */}
       <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Tratamientos anteriores</p>
+          <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Tratamientos y/o internaciones anteriores</p>
           <Button size="sm" variant="secondary" onClick={addTrat}>+ Agregar</Button>
         </div>
         {tratamientos.length === 0 ? (
@@ -662,7 +662,6 @@ function FichaClinicaExtra({
       <div className="border-t border-slate-200 dark:border-slate-700 pt-4 grid grid-cols-1 gap-4">
         <TextArea label="Historial familiar" rows={3} value={ff.historial_familiar ?? ''} onChange={(e) => onChange({ ...ff, historial_familiar: e.target.value })} />
         <TextArea label="Indicación de intervención" rows={3} value={ff.indicacion_intervencion ?? ''} onChange={(e) => onChange({ ...ff, indicacion_intervencion: e.target.value })} />
-        <Input label="Modalidad" value={ff.modalidad ?? ''} onChange={(e) => onChange({ ...ff, modalidad: e.target.value })} />
       </div>
     </>
   );

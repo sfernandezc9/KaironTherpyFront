@@ -238,7 +238,7 @@ export default function PacientesList() {
             <p className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3">Apoderado en la empresa <span className="text-xs font-normal text-slate-400">(opcional)</span></p>
             <div className="grid grid-cols-2 gap-4">
               <Input label="Nombre" value={form.apoderado_nombre ?? ''} onChange={(e) => setForm({ ...form, apoderado_nombre: e.target.value })} />
-              <Input label="Parentesco" value={form.apoderado_parentesco ?? ''} onChange={(e) => setForm({ ...form, apoderado_parentesco: e.target.value })} />
+              <Input label="Cargo" value={form.apoderado_parentesco ?? ''} onChange={(e) => setForm({ ...form, apoderado_parentesco: e.target.value })} />
               <Input label="Edad" type="number" value={form.apoderado_edad ?? ''} onChange={(e) => setForm({ ...form, apoderado_edad: e.target.value === '' ? undefined : Number(e.target.value) })} />
               <Input label="Teléfono" value={form.apoderado_telefono ?? ''} onChange={(e) => setForm({ ...form, apoderado_telefono: e.target.value })} />
               <div className="col-span-2">
