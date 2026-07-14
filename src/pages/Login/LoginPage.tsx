@@ -15,8 +15,8 @@ export default function LoginPage() {
 
   const mut = useMutation({
     mutationFn: login,
-    onSuccess: ({ token, usuario }) => {
-      setAuth(token, usuario);
+    onSuccess: ({ usuario }) => {
+      setAuth(usuario);
       navigate('/dashboard', { replace: true });
     },
     onError: (e: Error) => setError(e.message),

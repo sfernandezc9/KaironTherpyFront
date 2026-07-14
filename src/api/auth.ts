@@ -11,6 +11,10 @@ export const getMe = async (): Promise<Usuario> => {
   return data;
 };
 
+export const logout = async (): Promise<void> => {
+  await client.post('/auth/logout');
+};
+
 export const getUsuarios = async (): Promise<UsuarioAdmin[]> => {
   const { data } = await client.get<UsuarioAdmin[]>('/auth/usuarios');
   return data;

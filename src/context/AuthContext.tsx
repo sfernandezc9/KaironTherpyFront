@@ -1,14 +1,12 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import type { Usuario } from '../types/auth';
-import { getMe } from '../api/auth';
-import client from '../api/client';
+import { getMe, logout as logoutApi } from '../api/auth';
 
 interface AuthContextValue {
   user: Usuario | null;
-  token: string | null;
   isAdmin: boolean;
   isTerapeuta: boolean;
-  setAuth: (token: string, user: Usuario) => void;
+  setAuth: (user: Usuario) => void;
   logout: () => void;
   loading: boolean;
 }
@@ -17,37 +15,22 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Usuario | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem('token');
-    if (!stored) {
-      setLoading(false);
-      return;
-    }
-    setToken(stored);
-    client.defaults.headers.common['Authorization'] = `Bearer ${stored}`;
+    // La sesión vive en una cookie httpOnly; se valida pidiendo /auth/me
     getMe()
       .then((u) => setUser(u))
-      .catch(() => {
-        localStorage.removeItem('token');
-        delete client.defaults.headers.common['Authorization'];
-      })
+      .catch(() => setUser(null))
       .finally(() => setLoading(false));
   }, []);
 
-  const setAuth = (tok: string, usr: Usuario) => {
-    localStorage.setItem('token', tok);
-    client.defaults.headers.common['Authorization'] = `Bearer ${tok}`;
-    setToken(tok);
+  const setAuth = (usr: Usuario) => {
     setUser(usr);
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    delete client.defaults.headers.common['Authorization'];
-    setToken(null);
+    logoutApi().catch(() => {});
     setUser(null);
   };
 
@@ -55,7 +38,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
-        token,
         isAdmin: user?.rol === 'administrador',
         isTerapeuta: user?.rol === 'terapeuta',
         setAuth,

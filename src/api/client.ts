@@ -3,14 +3,18 @@ import axios from 'axios';
 const client = axios.create({
   baseURL: '/api',
   headers: { 'Content-Type': 'application/json' },
+  withCredentials: true, // envía la cookie httpOnly de sesión
 });
 
 client.interceptors.response.use(
   (res) => res,
   (err) => {
     if (err.response?.status === 401) {
-      localStorage.removeItem('token');
-      delete client.defaults.headers.common['Authorization'];
+      // La verificación inicial de sesión la maneja AuthContext; no redirigir aquí
+      const url: string = err.config?.url ?? '';
+      if (url.endsWith('/auth/me')) {
+        return Promise.reject(new Error('No autenticado'));
+      }
       window.location.href = '/login';
       return Promise.reject(new Error('Sesión expirada'));
     }

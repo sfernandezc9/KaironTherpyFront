@@ -56,9 +56,8 @@ export const uploadSesionArchivo = async (
 };
 
 export const downloadSesionArchivo = async (id: number, archivo_nombre: string): Promise<void> => {
-  const token = localStorage.getItem('token');
   const res = await fetch(`/api/sesiones/${id}/archivo`, {
-    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include', // envía la cookie httpOnly de sesión
   });
   if (!res.ok) {
     const json = await res.json().catch(() => ({}));
